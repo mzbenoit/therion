@@ -44,12 +44,13 @@
 #include "thinit.h"
 #include "thpdfdata.h"
 #include "thbuffer.h"
-#include "therion.h"
 
 thbuffer thtexfontsbuff;
 
-std::list<fontrecord> FONTS;
-typedef std::list<int> unistr;
+using namespace std;
+
+list<fontrecord> FONTS;
+typedef list<int> unistr;
 
 encodings_new::encodings_new () {
   v_fon.resize(134);
@@ -86,7 +87,7 @@ int encodings_new::get_enc_pos (int ch) {
       m_fon[ch] = v_fon.size()-1;
     }
   }
-//cout << "==FP== " << m_fon[style][ch] << std::endl;
+//cout << "==FP== " << m_fon[style][ch] << endl;
   return m_fon[ch];
 }
 
@@ -94,35 +95,35 @@ void encodings_new::write_enc_files() {
   if (NFSS==0) return;
 
   thprintf("generating TeX metrics ... ");
-  std::string style[5] = {"rm", "it", "bf", "ss", "si"};
-  std::string s, fc;
+  string style[5] = {"rm", "it", "bf", "ss", "si"};
+  string s, fc;
 
-  std::ofstream H ("thfonts.map"); // delete previous file, we will append to it below
+  ofstream H ("thfonts.map"); // delete previous file, we will append to it below
   if (!H) therror(("could not write font mapping data for pdfTeX\n"));
   H.close();
 
   int fcount = get_enc_count();
   for (int j = 0; j < fcount; j++) {
     fc = fmt::format("{:02d}", j);
-    std::string fname_enc = std::string("th_enc")+fc+".enc";
+    string fname_enc = string("th_enc")+fc+".enc";
     
-    std::ofstream F(fname_enc.c_str());
+    ofstream F(fname_enc.c_str());
     if (!F) therror(("could not write encoding file\n"));
-    F << "% LIGKERN uni002D uni002D =: uni2013 ; uni2013 uni002D =: uni2014 ;" << std::endl;
-    F << "% LIGKERN uni0066 uni0066 =: uniFB00 ; uni0066 uni006C =: uniFB02 ; uni0066 uni0069 =: uniFB01 ; uniFB00 uni0069 =: uniFB03 ; uniFB00 uni006C =: uniFB04 ;" << std::endl;
-    F << "/" << fname_enc << "[" << std::endl;
+    F << "% LIGKERN uni002D uni002D =: uni2013 ; uni2013 uni002D =: uni2014 ;" << endl;
+    F << "% LIGKERN uni0066 uni0066 =: uniFB00 ; uni0066 uni006C =: uniFB02 ; uni0066 uni0069 =: uniFB01 ; uniFB00 uni0069 =: uniFB03 ; uniFB00 uni006C =: uniFB04 ;" << endl;
+    F << "/" << fname_enc << "[" << endl;
     for (int k=0; k < 256; k++) {
-//cout << ccount << "** i:" << i << " j:" << j << " k:" << k << " "  << v_fon[i][k] << std::endl;
+//cout << ccount << "** i:" << i << " j:" << j << " k:" << k << " "  << v_fon[i][k] << endl;
       if ((v_fon.size() <= ((unsigned) 256*j + k)) || (v_fon[256*j + k] == 0)) 
-        F << "/.notdef" << std::endl;
+        F << "/.notdef" << endl;
       else
-        F << "/uni" << std::setw(4) << std::setfill('0') << std::hex << std::noshowbase << std::uppercase << v_fon[256*j + k] << std::endl;
+        F << "/uni" << setw(4) << setfill('0') << hex << noshowbase << uppercase << v_fon[256*j + k] << endl;
     }
-    F << "] def" << std::endl;
+    F << "] def" << endl;
     F.close();
 
     for (int i=0; i<5; i++) {
-      std::string fname_tfm = "th"+style[i]+fc;  // convention used also in tex2uni
+      string fname_tfm = "th"+style[i]+fc;  // convention used also in tex2uni
       
       // we don't use -fliga to turn ligatures on, because between
       // subsequent runs (metapost, pdftex) the meaning of ligatures 
@@ -130,28 +131,28 @@ void encodings_new::write_enc_files() {
       // if more characters are present at the second run
       // -- a few ligatures are initialised in the constructor
       
-      std::string type1 = (t1_convert==1) ? " " : " --no-type1 ";
+      string type1 = (t1_convert==1) ? " " : " --no-type1 ";
 
-      if (system(("\"" + std::string(thini.get_path_otftotfm()) + "\" -e " + fname_enc +
+      if (system(("\"" + string(thini.get_path_otftotfm()) + "\" -e " + fname_enc +
         " -fkern --no-default-ligkern --no-virtual --name " + fname_tfm +
 //        " -fkern --no-default-ligkern --name " + fname_tfm +
 //        type1 + " --warn-missing "+otf_file[i]+" > thotftfm.tmp").c_str()) > 0)
         type1 + otf_file[i]+" > thotftfm.tmp").c_str()) != 0)
           therror((("can't generate TFM file from "+otf_file[i]+" (LCDF typetools not installed?)").c_str()));
-      std::ifstream G ("thotftfm.tmp");
+      ifstream G ("thotftfm.tmp");
       if (!G) therror(("could not read font mapping data\n"));
       while (G) {
-        std::getline(G,s);
-        if (s.find("<") != std::string::npos) break;
+        getline(G,s);
+        if (s.find("<") != string::npos) break;
       }
       if (s.size() < 10) therror(("no usable otftotfm output"));
       if (s.substr(s.size()-3,3)=="otf" || s.substr(s.size()-3,3)=="OTF") {
         s.replace(s.rfind("<"), 1, "<<");  // OTF fonts must be fully embedded
       }
       G.close();
-      std::ofstream H ("thfonts.map", std::ios::app); 
+      ofstream H ("thfonts.map", ios::app); 
       if (!H) therror(("could not write font mapping data for pdfTeX\n"));
-      H << "\\pdfmapline{+" << s << "}" << std::endl;
+      H << "\\pdfmapline{+" << s << "}" << endl;
       H.close();
     }
   }
@@ -177,7 +178,7 @@ int get_enc_id(const char * enc) {
 }
 
 void print_tex_encodings (void) {
-  for (int i=0; i<max_enc; i++) std::cout << encodings[i] << std::endl;
+  for (int i=0; i<max_enc; i++) cout << encodings[i] << endl;
 }
 
 void init_encodings() {
@@ -216,7 +217,7 @@ void init_encodings() {
   FONTS.push_back(F);
 }
 
-unistr utf2uni(std::string s) {
+unistr utf2uni(string s) {
   unsigned char c;
   unistr t;
   int j;
@@ -248,9 +249,9 @@ unistr utf2uni(std::string s) {
 
 // converts utf8 to 2B Unicode in a special format for pdfTeX
 
-std::string utf2texoctal(std::string str) {
+string utf2texoctal(string str) {
   unistr s = utf2uni(str);
-  std::string t;
+  string t;
 //  t = "\\ne\\376\\ne\\377";
   unsigned char c;
   for (unistr::iterator I = s.begin(); I != s.end(); I++) {
@@ -264,9 +265,9 @@ std::string utf2texoctal(std::string str) {
 
 // converts utf8 to 2B Unicode in a special format for pdfTeX
 
-std::string utf2texhex(std::string str) {
+string utf2texhex(string str) {
   unistr s = utf2uni(str);
-  std::string t;
+  string t;
   unsigned char c;
   for (unistr::iterator I = s.begin(); I != s.end(); I++) {
     c = (*I) / 256;
@@ -277,9 +278,9 @@ std::string utf2texhex(std::string str) {
   return t;
 }
 
-std::string replace_all(std::string s, std::string f, std::string r) {
+string replace_all(string s, string f, string r) {
   size_t found = s.find(f);
-  while(found != std::string::npos) {
+  while(found != string::npos) {
     s.replace(found, f.length(), r);
     found = s.find(f);
   }
@@ -287,29 +288,29 @@ std::string replace_all(std::string s, std::string f, std::string r) {
 }
 
 // easier to use brute force than to link regex on all platforms :(
-std::string select_lang(std::string s, std::string lang) {
+string select_lang(string s, string lang) {
   size_t i,j;
-  if (s.find("<lang:") != std::string::npos) {
+  if (s.find("<lang:") != string::npos) {
     i = s.find("<lang:"+lang+">");
-    if (i != std::string::npos) {  // precise match
+    if (i != string::npos) {  // precise match
       i = s.find(">",i);
       j = s.find("<lang:",i);
-      return s.substr(i+1,(j==std::string::npos? std::string::npos : j-i-1));
+      return s.substr(i+1,(j==string::npos? string::npos : j-i-1));
     }
     if (lang.length()==5) {
       lang = lang.substr(0,2);
       i = s.find("<lang:"+lang+">");
-      if (i != std::string::npos) {  // match main language part
+      if (i != string::npos) {  // match main language part
         i = s.find(">",i);
         j = s.find("<lang:",i);
-        return s.substr(i+1,(j==std::string::npos? std::string::npos : j-i-1));
+        return s.substr(i+1,(j==string::npos? string::npos : j-i-1));
       }
     }
     i = s.find("<lang:"+lang);
-    if (i != std::string::npos) {  // match any of dialects if no main part is present
+    if (i != string::npos) {  // match any of dialects if no main part is present
       i = s.find(">",i);
       j = s.find("<lang:",i);
-      return s.substr(i+1,(j==std::string::npos? std::string::npos : j-i-1));
+      return s.substr(i+1,(j==string::npos? string::npos : j-i-1));
     }
     i = s.find("<lang:");  // no match, use everything before first lang as a default
     return s.substr(0,i);
@@ -321,12 +322,12 @@ std::string select_lang(std::string s, std::string lang) {
 
 #define SELFONT if (ENC_NEW.NFSS == 0 && lastenc!=-1) T << "\\thf" << u2str(lastenc+1)
 
-std::string utf2tex(std::string str, bool remove_kerning) {
+string utf2tex(string str, bool remove_kerning) {
 
   if (str.empty()) return str;
 
-  std::ostringstream T;
-  std::string tmp;
+  ostringstream T;
+  string tmp;
   int wc;  //wide char
   int lastenc = -1;
   int laststyle = -1;
@@ -337,12 +338,12 @@ std::string utf2tex(std::string str, bool remove_kerning) {
 
 //  str = select_lang(str, LAYOUT.langstr);
 
-  if (str.find("<center>") != std::string::npos) align = 1;
-  else if (str.find("<centre>") != std::string::npos) align = 1;
-  else if (str.find("<left>") != std::string::npos) align = 0;
-  else if (str.find("<right>") != std::string::npos) align = 2;
+  if (str.find("<center>") != string::npos) align = 1;
+  else if (str.find("<centre>") != string::npos) align = 1;
+  else if (str.find("<left>") != string::npos) align = 0;
+  else if (str.find("<right>") != string::npos) align = 2;
 
-  if (str.find("<br>") != std::string::npos) is_multiline = true;
+  if (str.find("<br>") != string::npos) is_multiline = true;
  
   str = replace_all(str,"<center>","");
   str = replace_all(str,"<centre>","");
@@ -441,7 +442,7 @@ if (ENC_NEW.NFSS==0) {
 
     while(local_repeat) {
       local_repeat = false;
-      for (std::list<fontrecord>::iterator J = FONTS.begin(); J != FONTS.end(); J++) {
+      for (list<fontrecord>::iterator J = FONTS.begin(); J != FONTS.end(); J++) {
         int j = J->id;
         for (int i=0; i<256; i++) {
           if (texenc[i][j] == wc || (is_accent && (texenc[i][j] == alt))) {
@@ -557,10 +558,10 @@ if (ENC_NEW.NFSS==0) {
   return T.str();
 }
 
-int tex2uni(std::string font, int ch) {
+int tex2uni(string font, int ch) {
   if (ENC_NEW.NFSS==0) {
     int id = -1;
-    for (std::list<fontrecord>::iterator J = FONTS.begin(); J != FONTS.end(); J++)
+    for (list<fontrecord>::iterator J = FONTS.begin(); J != FONTS.end(); J++)
       if (J->rm == font || J->it == font || J->ss == font || J->si == font || J->bf == font) {
         id = J->id;
         break;
@@ -569,7 +570,7 @@ int tex2uni(std::string font, int ch) {
     ch %= 256;
     if (ch < 0) ch += 256;  // if string is based on signed char
     if (id == -1) {
-      std::ostringstream s;
+      ostringstream s;
       s << "can't map character 0x" << std::uppercase << std::setfill('0') << 
            std::setw(2) << std::hex << ch << 
            " in font '" << font << "' to unicode";
@@ -577,7 +578,7 @@ int tex2uni(std::string font, int ch) {
     }
     return texenc[ch][id];
   } else {  // NFSS
-    std::string f_ind = font.substr(4,2);
+    string f_ind = font.substr(4,2);
     // basic check that we have a number
     thassert(f_ind[0] >= '0' && f_ind[0] <= '9' && f_ind[1] >= '0' && f_ind[1] <= '9');
     if (ch < 0) ch += 256;  // if string is based on signed char
@@ -586,7 +587,7 @@ int tex2uni(std::string font, int ch) {
 }
 
 const char * utf2tex (const char * s, bool b) {
-  std::string t = utf2tex(std::string(s),b);
+  string t = utf2tex(string(s),b);
   thtexfontsbuff.strcpy(t.c_str());
   return thtexfontsbuff.get_buffer();
 }
@@ -597,74 +598,74 @@ const char * utf2tex (const char * s, bool b) {
 // after each size/style change
 
 void print_fonts_setup() {
-  std::ofstream P("th_enc.tex");  // included also in MetaPost
+  ofstream P("th_enc.tex");  // included also in MetaPost
   if(!P) therror(("Can't write file th_enc.tex"));
-  P << "\\def\\rms{\\rm}" << std::endl;
-  P << "\\def\\its{\\it}" << std::endl;
-  P << "\\def\\bfs{\\bf}" << std::endl;
-  P << "\\def\\sss{\\ss}" << std::endl;
-  P << "\\def\\sis{\\si}" << std::endl;
+  P << "\\def\\rms{\\rm}" << endl;
+  P << "\\def\\its{\\it}" << endl;
+  P << "\\def\\bfs{\\bf}" << endl;
+  P << "\\def\\sss{\\ss}" << endl;
+  P << "\\def\\sis{\\si}" << endl;
 
 if (ENC_NEW.NFSS==0) {
-  P << "\\def\\fixaccent#1#2 {{\\setbox0\\hbox{#2}\\ifdim\\ht0=1ex\\accent#1 #2%" << std::endl;
-  P << "  \\else\\ooalign{\\unhbox0\\crcr\\hidewidth\\char#1\\hidewidth}\\fi}}" << std::endl;
+  P << "\\def\\fixaccent#1#2 {{\\setbox0\\hbox{#2}\\ifdim\\ht0=1ex\\accent#1 #2%" << endl;
+  P << "  \\else\\ooalign{\\unhbox0\\crcr\\hidewidth\\char#1\\hidewidth}\\fi}}" << endl;
 
-  P << "\\def\\size[#1]{%" << std::endl;
-  P << "  \\let\\prevstyle\\laststyle" << std::endl;
-  P << "  \\baselineskip#1pt" << std::endl;
-  P << "  \\baselineskip=1.2\\baselineskip" << std::endl;
+  P << "\\def\\size[#1]{%" << endl;
+  P << "  \\let\\prevstyle\\laststyle" << endl;
+  P << "  \\baselineskip#1pt" << endl;
+  P << "  \\baselineskip=1.2\\baselineskip" << endl;
 
-  std::string firstfont = "\\thf" + u2str(FONTS.begin()->id+1);
+  string firstfont = "\\thf" + u2str(FONTS.begin()->id+1);
 
   P << "  \\def\\rm{";
-  for (std::list<fontrecord>::iterator J = FONTS.begin(); J != FONTS.end(); J++)
+  for (list<fontrecord>::iterator J = FONTS.begin(); J != FONTS.end(); J++)
     P << "\\font\\thf" << u2str(J->id+1) << "=" << J->rm << " at#1pt";
-  P << "\\let\\laststyle\\rms" << firstfont << "}%" << std::endl;
+  P << "\\let\\laststyle\\rms" << firstfont << "}%" << endl;
 
   P << "  \\def\\it{";
-  for (std::list<fontrecord>::iterator J = FONTS.begin(); J != FONTS.end(); J++)
+  for (list<fontrecord>::iterator J = FONTS.begin(); J != FONTS.end(); J++)
     P << "\\font\\thf" << u2str(J->id+1) << "=" << J->it << " at#1pt";
-  P << "\\let\\laststyle\\its" << firstfont << "}%" << std::endl;
+  P << "\\let\\laststyle\\its" << firstfont << "}%" << endl;
 
   P << "  \\def\\bf{";
-  for (std::list<fontrecord>::iterator J = FONTS.begin(); J != FONTS.end(); J++)
+  for (list<fontrecord>::iterator J = FONTS.begin(); J != FONTS.end(); J++)
     P << "\\font\\thf" << u2str(J->id+1) << "=" << J->bf << " at#1pt";
-  P << "\\let\\laststyle\\bfs" << firstfont << "}%" << std::endl;
+  P << "\\let\\laststyle\\bfs" << firstfont << "}%" << endl;
 
   P << "  \\def\\ss{";
-  for (std::list<fontrecord>::iterator J = FONTS.begin(); J != FONTS.end(); J++)
+  for (list<fontrecord>::iterator J = FONTS.begin(); J != FONTS.end(); J++)
     P << "\\font\\thf" << u2str(J->id+1) << "=" << J->ss << " at#1pt";
-  P << "\\let\\laststyle\\sss" << firstfont << "}%" << std::endl;
+  P << "\\let\\laststyle\\sss" << firstfont << "}%" << endl;
 
   P << "  \\def\\si{";
-  for (std::list<fontrecord>::iterator J = FONTS.begin(); J != FONTS.end(); J++)
+  for (list<fontrecord>::iterator J = FONTS.begin(); J != FONTS.end(); J++)
     P << "\\font\\thf" << u2str(J->id+1) << "=" << J->si << " at#1pt";
-  P << "\\let\\laststyle\\sis" << firstfont << "}%" << std::endl;
+  P << "\\let\\laststyle\\sis" << firstfont << "}%" << endl;
   
-  P << "  \\prevstyle" << std::endl;
+  P << "  \\prevstyle" << endl;
   P << "}";
-  P << "\\let\\laststyle\\rms" << std::endl;
-  P << "\\size[10]\\ss" << std::endl;
-  P << "\\def\\mainfont{" << firstfont << "}" << std::endl;
+  P << "\\let\\laststyle\\rms" << endl;
+  P << "\\size[10]\\ss" << endl;
+  P << "\\def\\mainfont{" << firstfont << "}" << endl;
 } else {
-  std::string styledef[5] = {"rm", "it", "bf", "ss", "si"};
-  P << "\\def\\size[#1]{%" << std::endl;
-  P << "  \\let\\prevstyle\\laststyle" << std::endl;
-  P << "  \\baselineskip#1pt" << std::endl;
-  P << "  \\baselineskip=1.2\\baselineskip" << std::endl;
+  string styledef[5] = {"rm", "it", "bf", "ss", "si"};
+  P << "\\def\\size[#1]{%" << endl;
+  P << "  \\let\\prevstyle\\laststyle" << endl;
+  P << "  \\baselineskip#1pt" << endl;
+  P << "  \\baselineskip=1.2\\baselineskip" << endl;
   
   for (int j=0; j<5; j++) {
     P << "  \\def\\" << styledef[j] << "{";
     for (int i = 0; i < ENC_NEW.get_enc_count(); i++) 
       P << "\\font\\thf" << u2str(i+1) << "=th" << styledef[j] << 
-      std::setw(2) << std::setfill('0') << i << " at#1pt";
-    P << "\\let\\laststyle\\" << styledef[j] << "s\\thfa}%" << std::endl;
+      setw(2) << setfill('0') << i << " at#1pt";
+    P << "\\let\\laststyle\\" << styledef[j] << "s\\thfa}%" << endl;
     }
-  P << "  \\prevstyle" << std::endl;
+  P << "  \\prevstyle" << endl;
   P << "}";
-  P << "\\let\\laststyle\\rms" << std::endl;
-  P << "\\size[10]\\ss" << std::endl;
-  P << "\\def\\mainfont{\\thfa}" << std::endl;
+  P << "\\let\\laststyle\\rms" << endl;
+  P << "\\size[10]\\ss" << endl;
+  P << "\\def\\mainfont{\\thfa}" << endl;
 }  
 
   // needs to be defined here as this file (th_enc.tex) is included by MP before processing of the labels

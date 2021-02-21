@@ -41,41 +41,42 @@
 #include <cstdio>
 #include <cmath>
 
-#include "therion.h"
 #include "thpdfdbg.h"
 #include "thpdfdata.h"
 #include "thtexfonts.h"
 
+using namespace std;
+
 // extern list<scraprecord> SCRAPLIST;
 
-#define IOerr(F) ((std::string)"Can't open file "+F+"!\n").c_str()
+#define IOerr(F) ((string)"Can't open file "+F+"!\n").c_str()
 
-std::map<std::string,std::string> ALL_FONTS, ALL_PATTERNS;
-typedef std::set<unsigned char> FONTCHARS;
-std::map<std::string,FONTCHARS> USED_CHARS;
+map<string,string> ALL_FONTS, ALL_PATTERNS;
+typedef set<unsigned char> FONTCHARS;
+map<string,FONTCHARS> USED_CHARS;
 
 unsigned font_id, patt_id;
 int convert_mode;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string tex_Fname(std::string s) {return("THF"+s);}
-std::string tex_Pname(std::string s) {return("THP"+s);}
-std::string tex_Lname(std::string s) {return("THL"+s);}
+string tex_Fname(string s) {return("THF"+s);}
+string tex_Pname(string s) {return("THP"+s);}
+string tex_Lname(string s) {return("THL"+s);}
 
-std::list<scraprecord>::iterator find_scrap(std::string name) {
-    std::list<scraprecord>::iterator I;
+list<scraprecord>::iterator find_scrap(string name) {
+    list<scraprecord>::iterator I;
     for (I = SCRAPLIST.begin(); I != SCRAPLIST.end(); I++) {
       if (I->name == name) break;
     }
     if (I == SCRAPLIST.end()) {
-      std::cerr << "This can't happen!" << std::endl;
+      cerr << "This can't happen!" << endl;
     }
     return (I);
 }
 
-void print_queue(std::deque<std::string>& thstack, double llx, double lly, 
-                std::string command, std::ofstream& TEX) {
+void print_queue(deque<string>& thstack, double llx, double lly, 
+                string command, ofstream& TEX) {
   if (convert_mode>0) {TEX << "\\PL{";}
   for(unsigned i=0; i<thstack.size(); i=i+2) {
     TEX << atof(thstack[i].c_str())-llx << " " << 
@@ -83,26 +84,26 @@ void print_queue(std::deque<std::string>& thstack, double llx, double lly,
   }
   TEX << command;
   if (convert_mode>0) {TEX << "}%";}
-  TEX << std::endl;
+  TEX << endl;
 }
 
-void print_str(std::string str, std::ofstream& TEX) {
+void print_str(string str, ofstream& TEX) {
   if (convert_mode>0) {TEX << "\\PL{";}
   TEX << str;
   if (convert_mode>0) {TEX << "}%";}
-  TEX << std::endl;
+  TEX << endl;
 }
 
 
-std::string process_pdf_string(std::string s, std::string font) {
-  std::string r,t;
+string process_pdf_string(string s, string font) {
+  string r,t;
   unsigned char c;
   char *err;
   unsigned j;
-  std::map<std::string,FONTCHARS>::iterator I; 
+  map<string,FONTCHARS>::iterator I; 
 
   I = USED_CHARS.find(font);
-  if (I == USED_CHARS.end()) std::cerr << "This can't happen!";
+  if (I == USED_CHARS.end()) cerr << "This can't happen!";
   s = s.substr(1,s.length()-3);  // delete surrounding parentheses and final space
   for (unsigned i=0; i<s.size(); i++) {
     c = s[i];
@@ -150,27 +151,27 @@ std::string process_pdf_string(std::string s, std::string font) {
 //                30 -- legend
 //                31 -- northarrow, scalebar
 
-void distill_eps(std::string name, std::string fname, std::string cname, int mode, std::ofstream& TEX, color col = color()) {
-  std::string form_id;
-  std::string tok, lastmovex, lastmovey, buffer;
-  std::string font, patt, fntmatr;
-  std::string pattcolor = "/CS2 cs 0 0 0 1";
+void distill_eps(string name, string fname, string cname, int mode, ofstream& TEX, color col = color()) {
+  string form_id;
+  string tok, lastmovex, lastmovey, buffer;
+  string font, patt, fntmatr;
+  string pattcolor = "/CS2 cs 0 0 0 1";
   bool comment = true, concat = false, 
        already_transp = false, transp_used = false, before_group_transp = false, cancel_transp = true;
   double llx = 0, lly = 0, urx = 0, ury = 0, HS = 0.0, VS = 0.0;
   double dx, dy;
-  std::deque<std::string> thstack;
-  std::set<std::string> FORM_FONTS, FORM_PATTERNS;
-  std::list<scraprecord>::iterator J;
+  deque<string> thstack;
+  set<string> FORM_FONTS, FORM_PATTERNS;
+  list<scraprecord>::iterator J;
   
   convert_mode = mode;
   
-  std::ostringstream text_attr;
+  ostringstream text_attr;
   if (LAYOUT.colored_text && col.is_defined()) {
     text_attr << "0.1 w " << col.to_pdfliteral() << " 2 Tr ";
   };
 
-  std::ifstream F(fname.c_str());
+  ifstream F(fname.c_str());
   if(!F) therror((IOerr(fname)));
   while(F >> tok) {
     if (comment) {                      // File header
@@ -224,7 +225,7 @@ void distill_eps(std::string name, std::string fname, std::string cname, int mod
             J->X4 = ury+dy;
             form_id = tex_Xname("X"+name);
           }
-          else std::cerr << "Unknown mode!" << std::endl; 
+          else cerr << "Unknown mode!" << endl; 
         }
         else if (mode == 30) {
           form_id = tex_Lname(name);
@@ -240,10 +241,10 @@ void distill_eps(std::string name, std::string fname, std::string cname, int mod
         
 	HS = urx - llx;
 	VS = ury - lly;
-        TEX << "%\n\\setbox\\xxx=\\hbox{\\vbox to" << VS << "bp{\\vfill" << std::endl;
+        TEX << "%\n\\setbox\\xxx=\\hbox{\\vbox to" << VS << "bp{\\vfill" << endl;
 	if ((mode <= 11) && (cname != "")) { // beginning of boundary cl.path definition
           TEX << "\\PL{q}";          // for F and G scraps
-          std::ifstream G(cname.c_str());
+          ifstream G(cname.c_str());
           if(!G) therror((IOerr(cname)));
           while(G >> buffer) {
             if ((buffer == "m") || (buffer == "l") || (buffer == "c")) {
@@ -472,7 +473,7 @@ void distill_eps(std::string name, std::string fname, std::string cname, int mod
                     fmt::format("{:.1f}", atof(lastmovey.c_str())-lly) + " Tm", TEX);
         }
 	print_str(text_attr.str(),TEX);
-        TEX << "\\PL{" << buffer << " Tj}%" << std::endl;
+        TEX << "\\PL{" << buffer << " Tj}%" << endl;
         print_str("ET",TEX);
         concat = false;
         thstack.clear();
@@ -509,9 +510,9 @@ void distill_eps(std::string name, std::string fname, std::string cname, int mod
   F.close();
   if (mode>0) {
     if ((mode <= 11) && (cname != "")) { // end of boundary cl.path
-      TEX << "\\PL{Q}%" << std::endl;
+      TEX << "\\PL{Q}%" << endl;
     }
-    TEX << "}}\\wd\\xxx=" << HS << "bp" << std::endl;
+    TEX << "}}\\wd\\xxx=" << HS << "bp" << endl;
     TEX << "\\immediate\\pdfxform";
 
 //    if (mode == 12 || mode == 13) {
@@ -532,7 +533,7 @@ void distill_eps(std::string name, std::string fname, std::string cname, int mod
       }
       if (!FORM_FONTS.empty()) {
         TEX << "/Font << ";
-        for(std::set<std::string>::iterator I = FORM_FONTS.begin(); 
+        for(set<string>::iterator I = FORM_FONTS.begin(); 
                                   I != FORM_FONTS.end(); I++) {
           font = tex_Fname(ALL_FONTS[*I]);
           TEX << "/F\\pdffontname\\" << font << 
@@ -542,7 +543,7 @@ void distill_eps(std::string name, std::string fname, std::string cname, int mod
       }
       if (!FORM_PATTERNS.empty()) {
         TEX << "/Pattern << ";
-        for(std::set<std::string>::iterator I = FORM_PATTERNS.begin(); 
+        for(set<string>::iterator I = FORM_PATTERNS.begin(); 
                                     I != FORM_PATTERNS.end(); I++) {
           TEX << "/" << *I << " \\the\\" << tex_Pname(ALL_PATTERNS[*I]) << 
                  "\\space 0 R ";
@@ -559,7 +560,7 @@ void distill_eps(std::string name, std::string fname, std::string cname, int mod
       }
       TEX << "} ";
     }
-    TEX << "\\xxx\n" << tex_set_ref(form_id,"\\pdflastxform") << std::endl;
+    TEX << "\\xxx\n" << tex_set_ref(form_id,"\\pdflastxform") << endl;
   }
 }
 
@@ -567,12 +568,12 @@ void distill_eps(std::string name, std::string fname, std::string cname, int mod
 void convert_scraps() {
   unsigned char c;
  
-  std::ofstream TEX("th_formdef.tex");
+  ofstream TEX("th_formdef.tex");
   if(!TEX) therror((IOerr("th_formdef.tex")));
-  TEX.setf(std::ios::fixed, std::ios::floatfield);
+  TEX.setf(ios::fixed, ios::floatfield);
   TEX.precision(2);
   
-  for(std::list<scraprecord>::iterator I = SCRAPLIST.begin(); 
+  for(list<scraprecord>::iterator I = SCRAPLIST.begin(); 
                                   I != SCRAPLIST.end(); I++) {
 //    cout << "*" << flush;
     if (I->F != "") distill_eps(I->name, I->F, I->C, 10, TEX, I->col_scrap);
@@ -584,7 +585,7 @@ void convert_scraps() {
   }
 
   // similarly with legend (distill_eps( , , , 30, TEX))
-  for(std::list<legendrecord>::iterator I = LEGENDLIST.begin(); 
+  for(list<legendrecord>::iterator I = LEGENDLIST.begin(); 
                                   I != LEGENDLIST.end(); I++) {
     if (I->fname != "") distill_eps(I->name, I->fname, "", 30, TEX);
   }
@@ -609,25 +610,25 @@ void convert_scraps() {
 
   TEX.close();
 
-  std::ofstream F("th_fontdef.tex");
+  ofstream F("th_fontdef.tex");
   if(!F) therror((IOerr("th_fontdef.tex")));
-  F << "% FONTS:" << std::endl;
-  F.setf(std::ios::fixed, std::ios::floatfield);
+  F << "% FONTS:" << endl;
+  F.setf(ios::fixed, ios::floatfield);
   F.precision(2);
-  for (std::map<std::string,std::string>::iterator I = ALL_FONTS.begin(); 
+  for (map<string,string>::iterator I = ALL_FONTS.begin(); 
                                     I != ALL_FONTS.end(); I++) {
-    F << "\\font\\" << tex_Fname((*I).second) << "=" << (*I).first << std::endl;
+    F << "\\font\\" << tex_Fname((*I).second) << "=" << (*I).first << endl;
 
   }
-  F << "\\begingroup" << std::endl           // make special characters normal
-    << "\\catcode`\\^^@=12\\catcode`\\^^?=12\\catcode`\\{=12" << std::endl
-    << "\\catcode`\\}=12\\catcode`\\$=12\\catcode`\\&=12" << std::endl
-    << "\\catcode`\\#=12\\catcode`\\_=12\\catcode`\\~=12" << std::endl
-    << "\\catcode`\\%=12" << std::endl
-    << "\\catcode`\\^^L=12\\catcode`\\^^A=12\\catcode`\\^^K=12\\catcode`\\^^I=12" << std::endl
-    << "\\catcode`\\^^M=12" << std::endl;   // na tomto riadku ma tex este stare catcode konca riadku,
+  F << "\\begingroup" << endl           // make special characters normal
+    << "\\catcode`\\^^@=12\\catcode`\\^^?=12\\catcode`\\{=12" << endl
+    << "\\catcode`\\}=12\\catcode`\\$=12\\catcode`\\&=12" << endl
+    << "\\catcode`\\#=12\\catcode`\\_=12\\catcode`\\~=12" << endl
+    << "\\catcode`\\%=12" << endl
+    << "\\catcode`\\^^L=12\\catcode`\\^^A=12\\catcode`\\^^K=12\\catcode`\\^^I=12" << endl
+    << "\\catcode`\\^^M=12" << endl;   // na tomto riadku ma tex este stare catcode konca riadku,
                                        // vsetko nasledovne musi byt v jednom riadku
-  for (std::map<std::string,FONTCHARS>::iterator I = USED_CHARS.begin(); 
+  for (map<string,FONTCHARS>::iterator I = USED_CHARS.begin(); 
                                        I != USED_CHARS.end(); I++) {
     F << "\\includechars\\" << (*I).first << ":";
     for (FONTCHARS::iterator J = ((*I).second).begin();
@@ -638,7 +639,7 @@ void convert_scraps() {
         F << c;
         if (c==92) F << " ";     // \ has to be followed by space
       } else if (c >= 128) {
-        F << "^^" << std::hex << (int)c;
+        F << "^^" << hex << (int)c;
       }
       else {
         F << "^^" << char(c+64);
@@ -646,13 +647,13 @@ void convert_scraps() {
     }
     F << "\\endinclude";
   }
-  F << "\\endgroup" << std::endl;
-  F << "% PATTERNS:" << std::endl;
-  std::ifstream P("patterns.dat");
+  F << "\\endgroup" << endl;
+  F << "% PATTERNS:" << endl;
+  ifstream P("patterns.dat");
   if(!P) therror((IOerr("patterns.dat")));
   char buf[5000];
   char delim[] = ":";
-  std::string line,num,pfile,bbox,xstep,ystep,matr;
+  string line,num,pfile,bbox,xstep,ystep,matr;
   while(P.getline(buf,5000,'\n')) {
     num = strtok(buf,delim);
     pfile = strtok(NULL,delim);
@@ -660,32 +661,32 @@ void convert_scraps() {
     xstep = strtok(NULL,delim);
     ystep = strtok(NULL,delim);
     matr = strtok(NULL,delim);
-    std::map<std::string,std::string>::iterator I = ALL_PATTERNS.find(num);
+    map<string,string>::iterator I = ALL_PATTERNS.find(num);
     if (I != ALL_PATTERNS.end()) {
-      F << "\\immediate\\pdfobj stream attr {/Type /Pattern" << std::endl;
-      F << "/PaintType 2 /PatternType 1 /TilingType 1" << std::endl;
-      F << "/Matrix " << matr << std::endl;
-      F << "/BBox " << bbox << std::endl;
-      F << "/XStep " << xstep << std::endl;
-      F << "/YStep " << ystep << std::endl;
+      F << "\\immediate\\pdfobj stream attr {/Type /Pattern" << endl;
+      F << "/PaintType 2 /PatternType 1 /TilingType 1" << endl;
+      F << "/Matrix " << matr << endl;
+      F << "/BBox " << bbox << endl;
+      F << "/XStep " << xstep << endl;
+      F << "/YStep " << ystep << endl;
       F << "/Resources << /ProcSet [/PDF ] ";
       if (icc_used()) F << " /ColorSpace <<" << icc2pdfresources() << ">> ";
-      F << ">>} {" << std::endl;
+      F << ">>} {" << endl;
       distill_eps("", pfile , "", 0, F);
       F << "} \\newcount \\" << tex_Pname((*I).second) << 
-           "\\" << tex_Pname((*I).second) << "=\\pdflastobj" << std::endl;
+           "\\" << tex_Pname((*I).second) << "=\\pdflastobj" << endl;
     }
   }
   P.close();
   F.close();
 
-  std::vector<std::string> legend_arr_n, legend_arr_d;
-  for(std::list<legendrecord>::iterator I = LEGENDLIST.begin(); 
+  vector<string> legend_arr_n, legend_arr_d;
+  for(list<legendrecord>::iterator I = LEGENDLIST.begin(); 
                                    I != LEGENDLIST.end(); I++) {
     legend_arr_n.push_back(I->name);
     legend_arr_d.push_back(I->descr);
   }
-  std::ofstream LEG("th_legend.tex");
+  ofstream LEG("th_legend.tex");
   if(!LEG) therror(("Can't write a file!"));
 /*  for(list<legendrecord>::iterator I = LEGENDLIST.begin(); 
                                    I != LEGENDLIST.end(); I++) {
@@ -697,30 +698,30 @@ void convert_scraps() {
   int rows = (int) ceil(double(legendbox_num) / columns);
   int pos = 0;
   
-  LEG << "\\legendcolumns" << columns << std::endl;
+  LEG << "\\legendcolumns" << columns << endl;
 
   for (int i = 0; i < rows; i++) {
-    LEG << "\\line{%" << std::endl;
+    LEG << "\\line{%" << endl;
     for (int j = 0; j < columns; j++) {
       pos = i + j * rows;
       if (pos < legendbox_num) 
         LEG << "  \\legendsymbolbox{" << tex_get_ref(tex_Lname(legend_arr_n[pos])) <<
-               "}{" << utf2tex(legend_arr_d[pos]) << "}\\hskip10pt" << std::endl;
+               "}{" << utf2tex(legend_arr_d[pos]) << "}\\hskip10pt" << endl;
     }
-    LEG << "\\hss}" << std::endl;
+    LEG << "\\hss}" << endl;
   }
 
   LEG.close();
 
-  std::vector<colorlegendrecord> legend_color;
+  vector<colorlegendrecord> legend_color;
   colorlegendrecord lcr;
-  for(std::list<colorlegendrecord>::iterator I = COLORLEGENDLIST.begin(); 
+  for(list<colorlegendrecord>::iterator I = COLORLEGENDLIST.begin(); 
                                    I != COLORLEGENDLIST.end(); I++) {
     lcr.col_legend = I->col_legend;
     lcr.texname = I->texname;
     legend_color.push_back(lcr);
   }
-  std::ofstream LEGCOLOR("th_legendcolor.tex");
+  ofstream LEGCOLOR("th_legendcolor.tex");
   if(!LEGCOLOR) therror(("Can't write a file!"));
 
   legendbox_num = COLORLEGENDLIST.size();
@@ -728,21 +729,21 @@ void convert_scraps() {
   rows = (int) ceil(double(legendbox_num) / columns);
   pos = 0;
   
-  LEGCOLOR << "\\legendcolumns" << columns << std::endl;
+  LEGCOLOR << "\\legendcolumns" << columns << endl;
 
   for (int i = 0; i < rows; i++) {
-    LEGCOLOR << "\\line{%" << std::endl;
+    LEGCOLOR << "\\line{%" << endl;
     for (int j = 0; j < columns; j++) {
       pos = i + j * rows;
       if (pos < legendbox_num) {
         LEGCOLOR << "  \\colorlegendbox{";
         if (LAYOUT.transparency) LEGCOLOR << "/GS1 gs ";   // colorlegendbox argument is enclosed in q ... Q
-        LEGCOLOR << legend_color[pos].col_legend.to_pdfliteral(fillstroke::fill) << "}%" << std::endl;
+        LEGCOLOR << legend_color[pos].col_legend.to_pdfliteral(fillstroke::fill) << "}%" << endl;
         LEGCOLOR << "  \\legendsymbolbox{\\pdflastxform}{" <<
-	legend_color[pos].texname << "}\\hskip10pt" << std::endl;
+	legend_color[pos].texname << "}\\hskip10pt" << endl;
       }
     }
-    LEGCOLOR << "\\hss}" << std::endl;
+    LEGCOLOR << "\\hss}" << endl;
   }
 
   LEGCOLOR.close();

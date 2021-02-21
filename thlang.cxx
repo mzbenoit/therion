@@ -99,7 +99,7 @@ void thlang_set_translation(char * lang, char * text, char * translation) {
   int lang_id;
   lang_id = thlang_parse(lang);
   if (lang_id == THLANG_UNKNOWN)
-    ththrow("unknown language -- {}", lang);
+    ththrow(("unknown language -- %s", lang));
   int text_id;
   text_id = thmatch_token(text, thtt_texts);
   if (text_id == -1) {
@@ -109,7 +109,7 @@ void thlang_set_translation(char * lang, char * text, char * translation) {
       (strncmp(text,"area u:",7) == 0)) {
         ulang_map[thlang_str(lang_id, thdb.strstore(text, true))] = thdb.strstore(translation);
     } else
-      ththrow("unknown text -- {}", text);
+      ththrow(("unknown text -- %s", text))
   } else { 
     thlang_translations[text_id][lang_id] = thdb.strstore(translation);
   }

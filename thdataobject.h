@@ -418,10 +418,10 @@ class thdataobject {
   
     
   /**
-   * Get object source location.
+   * Write object source to exception description.
    */
    
-  virtual std::string throw_source() const;
+  virtual void throw_source();
   
   
   /**

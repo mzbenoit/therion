@@ -28,7 +28,7 @@
  
 #include "thattr.h"
 #include "shapefil.h"
-#include "therion.h"
+#include "thexception.h"
 #include "thchenc.h"
 #include <cctype>
 #include <cmath>

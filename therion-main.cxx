@@ -252,9 +252,13 @@ int main(int argc, char * argv[]) {
 #ifndef THDEBUG
 #ifndef THMSVC
   }
-  catch(const std::exception& e)
+  catch(...)
   {
-      therror((e.what()));
+    if (strlen(thexc.get_buffer()) == 0) {
+      therror(("unknown exception"));  
+    } else {
+      therror((thexc.get_desc()));
+    }
   }
 #endif
 #endif

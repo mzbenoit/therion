@@ -36,14 +36,16 @@
 #include "thpdfdata.h"
 #include "thlang.h"
 
-std::list<scraprecord> SCRAPLIST;
-std::list<legendrecord> LEGENDLIST;
-std::list<colorlegendrecord> COLORLEGENDLIST;
-std::map<int,layerrecord> LAYERHASH;
-std::set<int> MAP_PREVIEW_UP, MAP_PREVIEW_DOWN;
+using namespace std;
+
+list<scraprecord> SCRAPLIST;
+list<legendrecord> LEGENDLIST;
+list<colorlegendrecord> COLORLEGENDLIST;
+map<int,layerrecord> LAYERHASH;
+set<int> MAP_PREVIEW_UP, MAP_PREVIEW_DOWN;
 layout LAYOUT;
 
-std::list<surfpictrecord> SURFPICTLIST;
+list<surfpictrecord> SURFPICTLIST;
 
 scraprecord::scraprecord() {
   S1=0.0; S2=0.0;

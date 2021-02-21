@@ -47,15 +47,16 @@
 #include "thpdfdata.h"
 #include "thtexfonts.h"
 #include "thconvert.h"
-#include "therion.h"
 
-#define IOerr(F) ((std::string)"Can't open file "+F+"!\n").c_str()
+using namespace std;
 
-extern std::map<std::string,std::string> ALL_FONTS, ALL_PATTERNS;
-typedef std::set<unsigned char> FONTCHARS;
-extern std::map<std::string,FONTCHARS> USED_CHARS;
-std::list<pattern> PATTERNLIST;
-std::list<converted_data> GRIDLIST;
+#define IOerr(F) ((string)"Can't open file "+F+"!\n").c_str()
+
+extern map<string,string> ALL_FONTS, ALL_PATTERNS;
+typedef set<unsigned char> FONTCHARS;
+extern map<string,FONTCHARS> USED_CHARS;
+list<pattern> PATTERNLIST;
+list<converted_data> GRIDLIST;
 converted_data NArrow, ScBar;
 
 extern unsigned font_id, patt_id;
@@ -93,7 +94,7 @@ void color::set(double a, double b, double c, double d) {
     this->d = d;
   } else {  // convert to gray in grayscale output (for now it works in SVG export only because of a different approach to MP data conversion)
     model = colormodel::grey;
-    this->a = 1.0 - std::min(1.0, 0.3*a + 0.59*b + 0.11*c + d);   // see PDF Reference, section 6.2
+    this->a = 1.0 - min(1.0, 0.3*a + 0.59*b + 0.11*c + d);   // see PDF Reference, section 6.2
   }
 }
 
@@ -108,7 +109,7 @@ bool color::is_defined() {
   return model != colormodel::no;
 }
 
-std::string color::to_svg() {
+string color::to_svg() {
   double r = 0, g = 0, b = 0;
   if (model == colormodel::grey)
     r = g = b = this->a;
@@ -118,9 +119,9 @@ std::string color::to_svg() {
     b = this->c;
   }
   else if (model == colormodel::cmyk) {
-    r = 1.0 - std::min(1.0, this->a + this->d);
-    g = 1.0 - std::min(1.0, this->b + this->d);
-    b = 1.0 - std::min(1.0, this->c + this->d);
+    r = 1.0 - min(1.0, this->a + this->d);
+    g = 1.0 - min(1.0, this->b + this->d);
+    b = 1.0 - min(1.0, this->c + this->d);
   }
   else therror(("undefined color used"));
   return fmt::format("#{:02x}{:02x}{:02x}",int(255*r) % 256,
@@ -128,9 +129,9 @@ std::string color::to_svg() {
                                            int(255*b) % 256);
 }
 
-std::string color::to_pdfliteral(fillstroke fs) {
-  std::ostringstream s;
-  s << std::setprecision(3);
+string color::to_pdfliteral(fillstroke fs) {
+  ostringstream s;
+  s << setprecision(3);
   if (model == colormodel::grey) {
     if (fs == fillstroke::fill || fs == fillstroke::fillstroke)
       s << this->a << " g";
@@ -167,7 +168,7 @@ CGS::CGS () {
 
 int CGS::clippathID = 0;
 
-std::string CGS::svg_color() {
+string CGS::svg_color() {
   if (!col.is_defined()) return "inherit";
   return col.to_svg();
 }
@@ -185,7 +186,7 @@ void MP_text::clear() {
   transformed = false;
 }
 
-void MP_text::print_svg(std::ofstream & F, CGS & gstate) {
+void MP_text::print_svg(ofstream & F, CGS & gstate) {
   F << "<text font-family=\"" << font << "\" font-size=\"" << size << "\" ";
   if (LAYOUT.colored_text && col.is_defined()) F << 
     "fill=\"" << col.to_svg() << "\" " <<
@@ -194,8 +195,8 @@ void MP_text::print_svg(std::ofstream & F, CGS & gstate) {
   F << "transform=\"matrix(" << xx << " " << xy << " " << -yx << " " << -yy <<
        " " << x << " " << y << ")\">";
   for (unsigned int i = 0; i < text.size(); i++)
-    F << "&#x" << std::hex << tex2uni(font, int(text[i])) << std::dec << ";";
-  F << "</text>" << std::endl;
+    F << "&#x" << hex << tex2uni(font, int(text[i])) << dec << ";";
+  F << "</text>" << endl;
 }
 
 
@@ -217,14 +218,14 @@ MP_transform::MP_transform () {
   clear();
 }
 
-void MP_transform::set(int T, std::string s1, std::string s2,double dx, double dy) {
+void MP_transform::set(int T, string s1, string s2,double dx, double dy) {
   command = T;
   transf[0] = atof(s1.c_str())-dx;
   transf[1] = atof(s2.c_str())-dy;
 }
 
-void MP_transform::set(int T, std::string s1, std::string s2, std::string s3,
-                              std::string s4, std::string s5, std::string s6,
+void MP_transform::set(int T, string s1, string s2, string s3,
+                              string s4, string s5, string s6,
                               double dx, double dy) {
   command = T;
   transf[0] = atof(s1.c_str());
@@ -246,7 +247,7 @@ MP_path::MP_path() {
   clear();
 }
 
-void MP_path::add(int command, std::string s1, std::string s2, double dx, double dy) {
+void MP_path::add(int command, string s1, string s2, double dx, double dy) {
   MP_path_segment seg;
   seg.command = command;
   seg.coord[0] = atof(s1.c_str())-dx;
@@ -254,8 +255,8 @@ void MP_path::add(int command, std::string s1, std::string s2, double dx, double
   segments.push_back(seg);
 }
 
-void MP_path::add(int command, std::string s1, std::string s2, std::string s3, 
-                               std::string s4, std::string s5, std::string s6,
+void MP_path::add(int command, string s1, string s2, string s3, 
+                               string s4, string s5, string s6,
                                double dx, double dy) {
   MP_path_segment seg;
   seg.command = command;
@@ -268,11 +269,11 @@ void MP_path::add(int command, std::string s1, std::string s2, std::string s3,
   segments.push_back(seg);
 }
 
-void MP_path::print_svg(std::ofstream & F, CGS & gstate, std::string unique_prefix) {
+void MP_path::print_svg(ofstream & F, CGS & gstate, string unique_prefix) {
   if (fillstroke == MP_clip) {
     CGS::clippathID++;
-    gstate.clippathdepth.insert(std::make_pair(CGS::clippathID,0));
-    F << "<clipPath id=\"clip_" << CGS::clippathID << "_" << unique_prefix << "\">" << std::endl << "  ";
+    gstate.clippathdepth.insert(make_pair(CGS::clippathID,0));
+    F << "<clipPath id=\"clip_" << CGS::clippathID << "_" << unique_prefix << "\">" << endl << "  ";
   }
   F << "<path ";
   if (fillstroke != MP_clip) {
@@ -298,7 +299,7 @@ void MP_path::print_svg(std::ofstream & F, CGS & gstate, std::string unique_pref
       if (!gstate.dasharray.empty()) {
         F << "stroke-dasharray=\"";
         unsigned int i = 1;
-        for(std::list<float>::iterator I = gstate.dasharray.begin();
+        for(list<float>::iterator I = gstate.dasharray.begin();
                                   I != gstate.dasharray.end(); I++) {
           F << *I;
           if (i++ < gstate.dasharray.size()) F << ",";
@@ -330,9 +331,9 @@ void MP_path::print_svg(std::ofstream & F, CGS & gstate, std::string unique_pref
     }
   }
   if (closed) F << "Z";
-  F << "\" />" << std::endl;
-  if (fillstroke == MP_clip) F << "</clipPath>" << std::endl << 
-     "<g clip-path=\"url(#clip_" << CGS::clippathID << "_" << unique_prefix << ")\">" << std::endl;
+  F << "\" />" << endl;
+  if (fillstroke == MP_clip) F << "</clipPath>" << endl << 
+     "<g clip-path=\"url(#clip_" << CGS::clippathID << "_" << unique_prefix << ")\">" << endl;
 }
 
 void MP_data::add(int i) {
@@ -342,7 +343,7 @@ void MP_data::add(int i) {
   index.push_back(ind);
 }
 
-void MP_data::add(int i, std::string s) {
+void MP_data::add(int i, string s) {
   MP_index ind;
   MP_setting set;
   ind.vector = I_setting;
@@ -353,20 +354,20 @@ void MP_data::add(int i, std::string s) {
     s.replace(s.find("["),1,"");
     s.replace(s.find("]"),1,"");
     set.dasharray.clear();
-    std::istringstream ss(s);
+    istringstream ss(s);
     while (ss >> fl) set.dasharray.push_back(fl);
     set.dasharray.pop_back();
     set.dashoffset = fl;
     //set.str = s;
   }
   else if (i == MP_rgb) {
-    std::istringstream ss(s); // prerobit!!!
+    istringstream ss(s); // prerobit!!!
     ss >> set.data[0];
     ss >> set.data[1];
     ss >> set.data[2];
   }
   else if (i == MP_cmyk) {
-    std::istringstream ss(s);
+    istringstream ss(s);
     ss >> set.data[0];
     ss >> set.data[1];
     ss >> set.data[2];
@@ -416,7 +417,7 @@ void MP_data::clear() {
   idx = 0;
 }
 
-void MP_setting::print_svg (std::ofstream & F, CGS & gstate) {
+void MP_setting::print_svg (ofstream & F, CGS & gstate) {
   switch (command) {
     case MP_rgb:
       gstate.col.set(data[0], data[1], data[2]);
@@ -452,9 +453,9 @@ void MP_setting::print_svg (std::ofstream & F, CGS & gstate) {
   }
 }
 
-std::map<int,int> tmpclip;
+map<int,int> tmpclip;
 
-void MP_data::print_svg (std::ofstream & F, std::string unique_prefix) {
+void MP_data::print_svg (ofstream & F, string unique_prefix) {
 //  F << "<g id=\"" << ID <<  // plain MP settings follow
 //       "\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-miterlimit=\"10\">" << endl;
   for (unsigned int i=0; i<index.size(); i++) {
@@ -471,17 +472,17 @@ void MP_data::print_svg (std::ofstream & F, std::string unique_prefix) {
       case I_gsave:
         switch (index[i].idx) {
           case MP_gsave:
-            for (std::map<int,int>::iterator I = gstate.clippathdepth.begin();
+            for (map<int,int>::iterator I = gstate.clippathdepth.begin();
                                         I!= gstate.clippathdepth.end(); I++) 
               I->second++;
-            F << "<g>" << std::endl;
+            F << "<g>" << endl;
             GSTATE_stack.push_back(gstate);
             break;
           case MP_grestore:
-            for (std::map<int,int>::iterator I = gstate.clippathdepth.begin();
+            for (map<int,int>::iterator I = gstate.clippathdepth.begin();
                                         I!= gstate.clippathdepth.end(); I++) {
               I->second--;
-              if (I->second < 0) F << "</g>" << std::endl;
+              if (I->second < 0) F << "</g>" << endl;
             }
             // nemoze ist do predch. cyklu, lebo zmazanie smernika
             // urobi chaos
@@ -495,7 +496,7 @@ void MP_data::print_svg (std::ofstream & F, std::string unique_prefix) {
             gstate = GSTATE_stack.back();
             gstate.clippathdepth = tmpclip;
             GSTATE_stack.pop_back();
-            F << "</g>" << std::endl;
+            F << "</g>" << endl;
             break;
           case MP_transp_on:
             
@@ -512,8 +513,8 @@ void MP_data::print_svg (std::ofstream & F, std::string unique_prefix) {
   thassert(gstate.clippathdepth.empty());
 }
 
-void converted_data::print_svg (std::ofstream & F, std::string unique_prefix) { 
-  std::ostringstream s;
+void converted_data::print_svg (ofstream & F, string unique_prefix) { 
+  ostringstream s;
   static long i_patt_def(10000);
   s << ++i_patt_def;   // i_patt maju byt rozne
   unique_prefix += "_";
@@ -524,11 +525,11 @@ void converted_data::print_svg (std::ofstream & F, std::string unique_prefix) {
       "cm\" viewBox=\"" << llx << " " << -ury << 
       " " << urx-llx << " " << ury-lly << 
       "\" xmlns=\"http://www.w3.org/2000/svg\" " << 
-      "xmlns:xlink=\"http://www.w3.org/1999/xlink\">" << std::endl;
-  F << "<defs>" << std::endl;
+      "xmlns:xlink=\"http://www.w3.org/1999/xlink\">" << endl;
+  F << "<defs>" << endl;
   //patterns
   if (!patterns.empty()) {
-    for (std::list<pattern>::iterator J = PATTERNLIST.begin();
+    for (list<pattern>::iterator J = PATTERNLIST.begin();
                                 J != PATTERNLIST.end(); J++) {
     if (patterns.count(J->name) > 0) {
         F << "<pattern id=\"patt_" << J->name <<  "_" << unique_prefix <<
@@ -538,29 +539,29 @@ void converted_data::print_svg (std::ofstream & F, std::string unique_prefix) {
             "\" patternTransform=\"matrix(" << J->xx << " " << J->xy << " " 
                                             << J->yx << " " << J->yy << " " 
                                             << J->x <<  " " << J->y  << 
-            ")\">" << std::endl;
+            ")\">" << endl;
         F << "<g transform=\"translate(" 
-                      << J->llx1-J->llx << " " << J->lly1-J->lly << ")\">" << std::endl;
+                      << J->llx1-J->llx << " " << J->lly1-J->lly << ")\">" << endl;
         J->data.MP.print_svg(F,unique_prefix);
-        F << "</g>" << std::endl;
-        F << "</pattern>" << std::endl;
+        F << "</g>" << endl;
+        F << "</pattern>" << endl;
       }
     }
   }
   // clip to initial viewBox
-  F << "<clipPath id=\"clip_viewBox_" << unique_prefix << "\">" << std::endl;
+  F << "<clipPath id=\"clip_viewBox_" << unique_prefix << "\">" << endl;
   F << "<path d=\"M" << llx << " " << lly << 
       "L" << urx << " " << lly << 
       "L" << urx << " " << ury << 
-      "L" << llx << " " << ury << "z\" />" << std::endl;
-  F << "</clipPath>" << std::endl;
+      "L" << llx << " " << ury << "z\" />" << endl;
+  F << "</clipPath>" << endl;
   
-  F << "</defs>" << std::endl;
+  F << "</defs>" << endl;
   // --- end of definitions ---
-  F << "<g transform=\"scale(1,-1)\" fill=\"#000000\" stroke=\"#000000\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-miterlimit=\"10\" fill-rule=\"evenodd\" clip-rule=\"evenodd\" clip-path=\"url(#clip_viewBox_" << unique_prefix << ")\">" << std::endl;
+  F << "<g transform=\"scale(1,-1)\" fill=\"#000000\" stroke=\"#000000\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-miterlimit=\"10\" fill-rule=\"evenodd\" clip-rule=\"evenodd\" clip-path=\"url(#clip_viewBox_" << unique_prefix << ")\">" << endl;
   MP.print_svg(F,unique_prefix);
-  F << "</g>" << std::endl;
-  F << "</svg>" << std::endl;
+  F << "</g>" << endl;
+  F << "</svg>" << endl;
 }
 
 void converted_data::clear() {
@@ -573,12 +574,12 @@ converted_data::converted_data() {
 }
 
 
-std::string process_pdf_string2(std::string s, std::string font) {
-  std::string r,t;
+string process_pdf_string2(string s, string font) {
+  string r,t;
   unsigned char c;
   char *err;
   unsigned j;
-  std::map<std::string,FONTCHARS>::iterator I; 
+  map<string,FONTCHARS>::iterator I; 
 
   I = USED_CHARS.find(font);
   thassert (I != USED_CHARS.end());
@@ -624,17 +625,17 @@ std::string process_pdf_string2(std::string s, std::string font) {
 
 
 
-void parse_eps(std::string fname, std::string cname, double dx, double dy, 
+void parse_eps(string fname, string cname, double dx, double dy, 
                double & c1, double & c2, double & c3, double & c4, 
                converted_data & data, color col) {
-  std::string tok, buffer;
-  std::string font, patt;
-  std::string pattcolor = "0 0 0";
+  string tok, buffer;
+  string font, patt;
+  string pattcolor = "0 0 0";
   bool comment = true, concat = false, 
        already_transp = false, transp_used = false, before_group_transp = false, cancel_transp = true;
   double llx = 0, lly = 0, urx = 0, ury = 0, HS = 0.0, VS = 0.0;
-  std::deque<std::string> thbuffer;
-  std::set<std::string> FORM_FONTS, FORM_PATTERNS;
+  deque<string> thbuffer;
+  set<string> FORM_FONTS, FORM_PATTERNS;
   bool inpath = false, gsaveinpath = false;
   
   MP_path mp_path;
@@ -643,7 +644,7 @@ void parse_eps(std::string fname, std::string cname, double dx, double dy,
 
   data.clear();
 
-  std::ifstream F(fname.c_str());
+  ifstream F(fname.c_str());
   if(!F) therror((IOerr(fname)));
   while(F >> tok) {
     if (comment) {                      // File header
@@ -666,7 +667,7 @@ void parse_eps(std::string fname, std::string cname, double dx, double dy,
 	if (cname != "") { // beginning of boundary cl.path definition
                            // for F and G scraps
           data.MP.add(MP_gsave);
-          std::ifstream G(cname.c_str());
+          ifstream G(cname.c_str());
           if(!G) therror((IOerr(cname)));
           mp_path.clear();
           while(G >> buffer) {
@@ -953,7 +954,7 @@ void parse_eps(std::string fname, std::string cname, double dx, double dy,
 
 void convert_scraps_new() {
   
-  for(std::list<scraprecord>::iterator I = SCRAPLIST.begin(); 
+  for(list<scraprecord>::iterator I = SCRAPLIST.begin(); 
                                   I != SCRAPLIST.end(); I++) {
     if (I->F != "") parse_eps(I->F, I->C, I->S1, I->S2, I->F1, I->F2, I->F3, I->F4, I->Fc, I->col_scrap);
     if (I->G != "") parse_eps(I->G, I->C, I->S1, I->S2, I->G1, I->G2, I->G3, I->G4, I->Gc);
@@ -963,7 +964,7 @@ void convert_scraps_new() {
     if (I->X != "") parse_eps(I->X, "", I->S1, I->S2, I->X1, I->X2, I->X3, I->X4, I->Xc, I->col_scrap);
   }
 
-  for(std::list<legendrecord>::iterator I = LEGENDLIST.begin(); 
+  for(list<legendrecord>::iterator I = LEGENDLIST.begin(); 
                                    I != LEGENDLIST.end(); I++) {
     double a,b,c,d;
     if (I->fname != "") parse_eps(I->fname, "",0,0,a,b,c,d,I->ldata);
@@ -1013,11 +1014,11 @@ void convert_scraps_new() {
 
   PATTERNLIST.clear();
 
-  std::ifstream P("patterns.dat");
+  ifstream P("patterns.dat");
   if(!P) therror(("Can't open patterns definition file!"));
   char buf[5000];
   char delim[] = ":";
-  std::string line,num,pfile,bbox,xstep,ystep,matr;
+  string line,num,pfile,bbox,xstep,ystep,matr;
   while(P.getline(buf,5000,'\n')) {
     num = strtok(buf,delim);
     pfile = strtok(NULL,delim);
@@ -1037,11 +1038,11 @@ void convert_scraps_new() {
 
       matr.replace(matr.find("["),1,"");
       matr.replace(matr.find("]"),1,"");
-      std::istringstream s1(matr);
+      istringstream s1(matr);
       s1 >> patt.xx >> patt.xy >> patt.yx >> patt.yy >> patt.x >> patt.y;
       bbox.replace(bbox.find("["),1,"");
       bbox.replace(bbox.find("]"),1,"");
-      std::istringstream s2(bbox);
+      istringstream s2(bbox);
       s2 >> patt.llx >> patt.lly >> patt.urx >> patt.ury;
 //      F << "/Matrix " << matr << endl;
 //      F << "/BBox " << bbox << endl;

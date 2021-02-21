@@ -56,8 +56,9 @@
 #include "thchenc.h"
 #include "thbuffer.h"
 
-#define IOerr(F) ((std::string)"Can't open file "+F+"!\n").c_str()
+using namespace std;
 
+#define IOerr(F) ((string)"Can't open file "+F+"!\n").c_str()
 
 
 ///////////
@@ -73,15 +74,15 @@ typedef struct {
   int id;
   int namex,namey,layer;
   bool dest,bookmark,title_before;
-  std::map< int,std::set<std::string> > scraps;
+  map< int,set<string> > scraps;
   int jumpE,jumpW,jumpN,jumpS;
-  std::set<int> jumpU,jumpD;
+  set<int> jumpU,jumpD;
 //  map< int,set<string> > preview;
 //  set<string> preview;
 } sheetrecord;
 
-std::map<std::string,std::set<std::string> > preview;
-std::map<std::string,std::list<sheetrecord>::iterator> SHEET_JMP;
+map<string,set<string> > preview;
+map<string,list<sheetrecord>::iterator> SHEET_JMP;
 
 
 bool operator < (sheetrecord a, sheetrecord b) {
@@ -92,7 +93,7 @@ bool operator == (sheetrecord a, sheetrecord b) {
   return a.id == b.id;
 }
 
-std::list<sheetrecord> SHEET;
+list<sheetrecord> SHEET;
 
 
 //////////
@@ -103,7 +104,7 @@ double MINX, MINY, MAXX, MAXY;
 double HS,VS;
 //////////
 
-std::string black2pdf(double shade, fillstroke fs) {    // shade: 0 = white, 1 = black
+string black2pdf(double shade, fillstroke fs) {    // shade: 0 = white, 1 = black
   if (shade < 0 || shade > 1) therror((fmt::format("shade {} out of range <0,1>",shade).c_str()));
   color c;
   if (LAYOUT.output_colormodel == colormodel::grey) c.set(1-shade);
@@ -113,15 +114,15 @@ std::string black2pdf(double shade, fillstroke fs) {    // shade: 0 = white, 1 =
   return c.to_pdfliteral(fs);
 }
 
-std::string tex_Sname(std::string s) {return("THS"+s);}
-std::string tex_Nname(std::string s) {return("THN"+s);}
-std::string tex_BMPname(std::string s) {return("THBMP"+s);} // bitmap
+string tex_Sname(string s) {return("THS"+s);}
+string tex_Nname(string s) {return("THN"+s);}
+string tex_BMPname(string s) {return("THBMP"+s);} // bitmap
 
-std::string xyz2str(int x, int y, int z) {
+string xyz2str(int x, int y, int z) {
   return fmt::format("{}.{}.{}",x,y,z);
 }
 
-std::list<sheetrecord>::iterator find_sheet(int x, int y, int z) {
+list<sheetrecord>::iterator find_sheet(int x, int y, int z) {
 //  list<sheetrecord>::iterator I;
 //  for (I = SHEET.begin(); I != SHEET.end(); I++) {
 //      if (I->layer == x && I->namex == y && I->namey == z) break;
@@ -138,7 +139,7 @@ void make_sheets() {
   sheetrecord SHREC;
 
   if (mode == ATLAS) {
-    for (std::map<int,layerrecord>::iterator I = LAYERHASH.begin(); 
+    for (map<int,layerrecord>::iterator I = LAYERHASH.begin(); 
                                         I != LAYERHASH.end(); I++) {
       I->second.minx = INT_MAX;
       I->second.miny = INT_MAX;
@@ -146,7 +147,7 @@ void make_sheets() {
       I->second.maxy = INT_MIN;
     }
   }
-  for (std::list<scraprecord>::iterator I = SCRAPLIST.begin(); 
+  for (list<scraprecord>::iterator I = SCRAPLIST.begin(); 
                                   I != SCRAPLIST.end(); I++) {
     llx = DBL_MAX; lly = DBL_MAX; urx = -DBL_MAX; ury = -DBL_MAX;
     if (I->F != "" && I->E == "" && I->G == "" && 
@@ -186,7 +187,7 @@ void make_sheets() {
       if (I->X3 > urx) urx = I->X3;
       if (I->X4 > ury) ury = I->X4;
     }
-    for (std::list<surfpictrecord>::iterator I_sk = I->SKETCHLIST.begin();
+    for (list<surfpictrecord>::iterator I_sk = I->SKETCHLIST.begin();
                                           I_sk != I->SKETCHLIST.end(); I_sk++) {
       for (int i = 0; i<=1; i++) {
         for (int j = 0; j<=1; j++) {
@@ -205,7 +206,7 @@ void make_sheets() {
     if (llx == DBL_MAX || lly == DBL_MAX || urx == -DBL_MAX || ury == -DBL_MAX) 
       therror(("This can't happen -- no data for a scrap!"));
     
-    std::map<int,layerrecord>::iterator J = LAYERHASH.find(I->layer);
+    map<int,layerrecord>::iterator J = LAYERHASH.find(I->layer);
     if (J == LAYERHASH.end()) therror (("This can't happen!"));
 
     if (mode == ATLAS) {
@@ -217,7 +218,7 @@ void make_sheets() {
       for (int i = Llx; i <= Urx; i++) {
         for (int j = Lly; j <= Ury; j++) {
           if (J->second.Z == 0) {    // Z layers don't create new sheets
-            std::list<sheetrecord>::iterator sheet_it = find_sheet(I->layer,i,j);
+            list<sheetrecord>::iterator sheet_it = find_sheet(I->layer,i,j);
             if (sheet_it == SHEET.end()) {
               sheet_it = SHEET.insert(SHEET.end(),SHREC);
               SHEET_JMP.insert(make_pair(xyz2str(I->layer,i,j),sheet_it));
@@ -226,10 +227,10 @@ void make_sheets() {
             sheet_it->namex = i;
             sheet_it->namey = j;
 
-            std::map<int,std::set<std::string> >::iterator K = sheet_it->scraps.find(I->level);
+            map<int,set<string> >::iterator K = sheet_it->scraps.find(I->level);
             if (K == sheet_it->scraps.end()) {
-              std::set<std::string> SCRP;
-              sheet_it->scraps.insert(std::make_pair(I->level,SCRP));
+              set<string> SCRP;
+              sheet_it->scraps.insert(make_pair(I->level,SCRP));
               K = sheet_it->scraps.find(I->level);
             }
             ((*K).second).insert(I->name);
@@ -240,10 +241,10 @@ void make_sheets() {
             if (J->second.maxy < Ury) J->second.maxy = Ury;
           } 
           // we add scrap to preview
-          std::set<std::string> tmpset;
-          std::string tmpstr;
+          set<string> tmpset;
+          string tmpstr;
           tmpstr = xyz2str(I->layer,i,j);
-          std::map<std::string,std::set<std::string> >::iterator pr_it = preview.find(tmpstr);
+          map<string,set<string> >::iterator pr_it = preview.find(tmpstr);
           if (pr_it == preview.end()) {
             preview.insert(make_pair(tmpstr,tmpset));
             pr_it = preview.find(tmpstr);
@@ -253,10 +254,10 @@ void make_sheets() {
       }
     }
     else {
-      std::map<int,std::set<std::string> >::iterator K = (((*J).second).scraps).find(I->level);
+      map<int,set<string> >::iterator K = (((*J).second).scraps).find(I->level);
       if (K == (((*J).second).scraps).end()) {
-        std::set<std::string> SCRP;
-        (((*J).second).scraps).insert(std::make_pair(I->level,SCRP));
+        set<string> SCRP;
+        (((*J).second).scraps).insert(make_pair(I->level,SCRP));
         K = (((*J).second).scraps).find(I->level);
       }
       ((*K).second).insert(I->name);
@@ -272,25 +273,25 @@ void make_sheets() {
     }
 
   }
-//  cout << "MINMAX " << MINX << " " << MINY << " " << MAXX << " " << MAXY << std::endl;
+//  cout << "MINMAX " << MINX << " " << MINY << " " << MAXX << " " << MAXY << endl;
 }
 
 void find_jumps() {
-  for (std::list<sheetrecord>::iterator sheet_it = SHEET.begin(); 
+  for (list<sheetrecord>::iterator sheet_it = SHEET.begin(); 
                                    sheet_it != SHEET.end(); sheet_it++) {
     sheet_it->jumpW = 0;
     sheet_it->jumpE = 0;
     sheet_it->jumpN = 0;
     sheet_it->jumpS = 0;
 
-    std::list<sheetrecord>::iterator I;
+    list<sheetrecord>::iterator I;
     
     int jump;    
                                
-    std::string W = xyz2str(sheet_it->layer,sheet_it->namex-1,sheet_it->namey);
-    std::string E = xyz2str(sheet_it->layer,sheet_it->namex+1,sheet_it->namey);
-    std::string N = xyz2str(sheet_it->layer,sheet_it->namex,sheet_it->namey+1);
-    std::string S = xyz2str(sheet_it->layer,sheet_it->namex,sheet_it->namey-1);
+    string W = xyz2str(sheet_it->layer,sheet_it->namex-1,sheet_it->namey);
+    string E = xyz2str(sheet_it->layer,sheet_it->namex+1,sheet_it->namey);
+    string N = xyz2str(sheet_it->layer,sheet_it->namex,sheet_it->namey+1);
+    string S = xyz2str(sheet_it->layer,sheet_it->namex,sheet_it->namey-1);
     if (SHEET_JMP.count(W) > 0) {
        I = SHEET_JMP.find(W)->second;
        sheet_it->jumpW = I->id;
@@ -312,16 +313,16 @@ void find_jumps() {
        I->dest = true;
     }
 
-    std::map<int,layerrecord>::iterator lay_it = LAYERHASH.find(sheet_it->layer);
+    map<int,layerrecord>::iterator lay_it = LAYERHASH.find(sheet_it->layer);
     if (lay_it == LAYERHASH.end()) therror (("This can't happen!"));
 
     if (!lay_it->second.U.empty()) {
-      for (std::set<int>::iterator l_it = lay_it->second.U.begin(); 
+      for (set<int>::iterator l_it = lay_it->second.U.begin(); 
                               l_it != lay_it->second.U.end(); l_it++) {
-        std::map<int,layerrecord>::iterator alt_lay_it = LAYERHASH.find(*l_it);
+        map<int,layerrecord>::iterator alt_lay_it = LAYERHASH.find(*l_it);
         if (alt_lay_it == LAYERHASH.end()) therror(("This can't happen!"));
         jump = (alt_lay_it->second.Z == 0) ? *l_it : alt_lay_it->second.AltJump;
-        std::string U = xyz2str(jump,sheet_it->namex,sheet_it->namey);
+        string U = xyz2str(jump,sheet_it->namex,sheet_it->namey);
         if (SHEET_JMP.count(U) > 0) {
           I = SHEET_JMP.find(U)->second;
           sheet_it->jumpU.insert(jump);
@@ -330,12 +331,12 @@ void find_jumps() {
       }
     }
     if (!lay_it->second.D.empty()) {
-      for (std::set<int>::iterator l_it = lay_it->second.D.begin(); 
+      for (set<int>::iterator l_it = lay_it->second.D.begin(); 
                               l_it != lay_it->second.D.end(); l_it++) {
-        std::map<int,layerrecord>::iterator alt_lay_it = LAYERHASH.find(*l_it);
+        map<int,layerrecord>::iterator alt_lay_it = LAYERHASH.find(*l_it);
         if (alt_lay_it == LAYERHASH.end()) therror(("This can't happen!"));
         jump = (alt_lay_it->second.Z == 0) ? *l_it : alt_lay_it->second.AltJump;
-        std::string D = xyz2str(jump,sheet_it->namex,sheet_it->namey);
+        string D = xyz2str(jump,sheet_it->namex,sheet_it->namey);
         if (SHEET_JMP.count(D) > 0) {
           I = SHEET_JMP.find(D)->second;
           sheet_it->jumpD.insert(jump);
@@ -349,7 +350,7 @@ void find_jumps() {
 
 
 
-std::string grid_name(std::string s, int offset) {
+string grid_name(string s, int offset) {
   unsigned char c;
   bool is_num = true;
 
@@ -374,12 +375,12 @@ std::string grid_name(std::string s, int offset) {
   else return "?";
 }
 
-std::set<int> find_excluded_pages(std::string s) {
-  std::set<int> excl;
+set<int> find_excluded_pages(string s) {
+  set<int> excl;
   int i,j;
   char c;
 //  istrstream S(s.c_str());
-  std::istringstream S(s);
+  istringstream S(s);
   
   c = ',';
   while (S >> i) {
@@ -392,23 +393,23 @@ std::set<int> find_excluded_pages(std::string s) {
     }
     else therror(("Invalid character in the exclusion list!"));
   }
-//cout << std::endl;
-//cout << "Excl.list: " << s << std::endl;  
+//cout << endl;
+//cout << "Excl.list: " << s << endl;  
 //cout << "Excl. set: ";  
 //for (set<int>::iterator I = excl.begin(); I != excl.end(); I++) 
 //  cout << *I << " ";
-//cout << std::endl;
+//cout << endl;
   return excl;
 }
 
 void sort_sheets() {
   int pageid = 1 + LAYOUT.own_pages, tmppagenum = 1;
-  std::set<int> excluded;
+  set<int> excluded;
   bool wait_for_title;
   
   if (LAYOUT.excl_pages) excluded = find_excluded_pages(LAYOUT.excl_list);
 
-  for (std::map<int,layerrecord>::reverse_iterator I = LAYERHASH.rbegin(); 
+  for (map<int,layerrecord>::reverse_iterator I = LAYERHASH.rbegin(); 
                                       I != LAYERHASH.rend(); I++) {
 //    I->second.minid = pageid;
     I->second.bookmark = false;
@@ -416,7 +417,7 @@ void sort_sheets() {
 
     for (int j = I->second.maxy; j >= I->second.miny; j--) {
       for (int i = I->second.minx; i <= I->second.maxx; i++) {
-        std::list<sheetrecord>::iterator sheet_it = find_sheet(I->first,i,j);
+        list<sheetrecord>::iterator sheet_it = find_sheet(I->first,i,j);
         if (sheet_it != SHEET.end()) {
 //          if (wait_for_title && excluded.count(tmppagenum) > 0) {
 //            wait_for_title = false;
@@ -442,7 +443,7 @@ void sort_sheets() {
             SHEET.erase(sheet_it);
             SHEET_JMP.erase(xyz2str(sheet_it->layer,
                                     sheet_it->namex,sheet_it->namey));
-//cout << "Should erase sheet " << tmppagenum << std::endl;
+//cout << "Should erase sheet " << tmppagenum << endl;
           }
           tmppagenum++;
         }
@@ -451,55 +452,55 @@ void sort_sheets() {
 //    I->second.maxid = pageid - 1;
   }
   SHEET.sort();
-//cout << "sheets: " << SHEET.size() << std::endl;  
+//cout << "sheets: " << SHEET.size() << endl;  
 }
 
 
-void print_preview(int up,std::ofstream& PAGEDEF,double HSHIFT,double VSHIFT,
-                   std::list<sheetrecord>::iterator sheet_it = std::list<sheetrecord>::iterator()) {
-  std::set<int> used_layers;
-  std::set<std::string> used_scraps;
+void print_preview(int up,ofstream& PAGEDEF,double HSHIFT,double VSHIFT,
+                   list<sheetrecord>::iterator sheet_it = list<sheetrecord>::iterator()) {
+  set<int> used_layers;
+  set<string> used_scraps;
   double xc = 0, yc = 0;
   
   if (LAYOUT.OCG) {
     if (mode == MAP)
-      PAGEDEF << "\\setbox\\xxx=\\hbox to \\adjustedHS{%" << std::endl;
+      PAGEDEF << "\\setbox\\xxx=\\hbox to \\adjustedHS{%" << endl;
     else 
-      PAGEDEF << "\\setbox\\xxx=\\hbox to " << HS << "bp{%" << std::endl;
+      PAGEDEF << "\\setbox\\xxx=\\hbox to " << HS << "bp{%" << endl;
   }
 
-//  PAGEDEF << (up ? "\\PL{q .1 w}%" : "\\PL{q .8 g}%") << std::endl;
+//  PAGEDEF << (up ? "\\PL{q .1 w}%" : "\\PL{q .8 g}%") << endl;
   
   if (up) { 
     PAGEDEF << "\\PL{q .1 w " << LAYOUT.col_preview_above.to_pdfliteral(fillstroke::stroke) <<
-               "}%" << std::endl;
+               "}%" << endl;
   }
   else { 
     PAGEDEF << "\\PL{q " << LAYOUT.col_preview_below.to_pdfliteral(fillstroke::fill) <<
-               "}%" << std::endl;
+               "}%" << endl;
   }
 
   if (mode == ATLAS) {
-    std::map<int,layerrecord>::iterator lay_it = LAYERHASH.find(sheet_it->layer);
+    map<int,layerrecord>::iterator lay_it = LAYERHASH.find(sheet_it->layer);
     if (lay_it == LAYERHASH.end()) therror(("This can't happen!"));
     used_layers = (up ? lay_it->second.U : lay_it->second.D);
   }
   else {
     used_layers = (up ? MAP_PREVIEW_UP : MAP_PREVIEW_DOWN);
   }
-  for (std::set<int>::iterator I=used_layers.begin(); I != used_layers.end(); I++) {
+  for (set<int>::iterator I=used_layers.begin(); I != used_layers.end(); I++) {
     if (mode == ATLAS) {
-        std::map<std::string,std::set<std::string> >::iterator pr_it = 
+        map<string,set<string> >::iterator pr_it = 
           preview.find(xyz2str(*I,sheet_it->namex,sheet_it->namey));
         if (pr_it != preview.end()) used_scraps = pr_it->second;
     }
     else {
-      std::map<int,layerrecord>::iterator J = LAYERHASH.find(*I);
+      map<int,layerrecord>::iterator J = LAYERHASH.find(*I);
       if (J == LAYERHASH.end()) therror(("This can't happen!"));
       used_scraps = J->second.allscraps;
     }
     if (!used_scraps.empty()) {
-      for (std::list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
+      for (list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
         if (used_scraps.count(K->name) > 0) {
           if (up) {
             if (K->B != "" && K->sect == 0) {
@@ -507,7 +508,7 @@ void print_preview(int up,std::ofstream& PAGEDEF,double HSHIFT,double VSHIFT,
               xc -= HSHIFT; yc -= VSHIFT;
               PAGEDEF << (mode == MAP && LAYOUT.OCG ? "\\PBcorr{" : "\\PB{") << 
                       xc << "}{" << yc << "}{" <<
-                      tex_get_ref(tex_Xname("B"+(K->name))) << "}%" << std::endl;
+                      tex_get_ref(tex_Xname("B"+(K->name))) << "}%" << endl;
             }
           }
           else {
@@ -516,53 +517,53 @@ void print_preview(int up,std::ofstream& PAGEDEF,double HSHIFT,double VSHIFT,
               xc -= HSHIFT; yc -= VSHIFT;
               PAGEDEF << (mode == MAP && LAYOUT.OCG ? "\\PBcorr{" : "\\PB{") << 
                       xc << "}{" << yc << "}{" <<
-                      tex_get_ref(tex_Xname("I"+(K->name))) << "}%" << std::endl;
+                      tex_get_ref(tex_Xname("I"+(K->name))) << "}%" << endl;
             }
           }
         }
       }
     }
   }
-  PAGEDEF << "\\PL{Q}%" << std::endl;
+  PAGEDEF << "\\PL{Q}%" << endl;
   if (LAYOUT.OCG) {
     if (mode==MAP)
-      PAGEDEF << "\\hfill}\\ht\\xxx=\\adjustedVS\\dp\\xxx=0bp" << std::endl;
+      PAGEDEF << "\\hfill}\\ht\\xxx=\\adjustedVS\\dp\\xxx=0bp" << endl;
     else 
-      PAGEDEF << "\\hfill}\\ht\\xxx=" << VS << "bp\\dp\\xxx=0bp" << std::endl;
+      PAGEDEF << "\\hfill}\\ht\\xxx=" << VS << "bp\\dp\\xxx=0bp" << endl;
     PAGEDEF << "\\immediate\\pdfxform ";
     PAGEDEF << "attr{/OC \\the\\" << (up ? "ocU" : "ocD") << "\\space 0 R} ";
     if (icc_used())  PAGEDEF << "resources{/ColorSpace <<" << icc2pdfresources() << ">>} ";
     if (mode == MAP)
-      PAGEDEF << "\\xxx\\PB{-\\adjustedX}{-\\adjustedY}{\\pdflastxform}%" << std::endl;
+      PAGEDEF << "\\xxx\\PB{-\\adjustedX}{-\\adjustedY}{\\pdflastxform}%" << endl;
     else 
-      PAGEDEF << "\\xxx\\PB{0}{0}{\\pdflastxform}%" << std::endl;
+      PAGEDEF << "\\xxx\\PB{0}{0}{\\pdflastxform}%" << endl;
   }
 }
 
 
 
-void compose_page(std::list<sheetrecord>::iterator sheet_it, std::ofstream& PAGE) {
-  std::map<int,layerrecord>::iterator lay_it = LAYERHASH.find(sheet_it->layer);
+void compose_page(list<sheetrecord>::iterator sheet_it, ofstream& PAGE) {
+  map<int,layerrecord>::iterator lay_it = LAYERHASH.find(sheet_it->layer);
   if (lay_it == LAYERHASH.end()) therror (("This can't happen!"));
 
   if (sheet_it->title_before) {
     PAGE << "\\TITLE{" << utf2tex(lay_it->second.T) << "}\n";
   }
 
-  PAGE << "%\n% Page: " << u2str(sheet_it->id) << std::endl << "%\n";
+  PAGE << "%\n% Page: " << u2str(sheet_it->id) << endl << "%\n";
   if (sheet_it->dest) PAGE << "\\pdfdest name {" << u2str(sheet_it->id) << 
-                              "} xyz" << std::endl;
+                              "} xyz" << endl;
 
   if (sheet_it->bookmark) {
     PAGE << "\\pdfoutline goto name {" << u2str(sheet_it->id) << 
                   "} count 0 {\\ne\\376\\ne\\377" << 
-                  utf2texoctal(lay_it->second.N) << "}%" << std::endl;
+                  utf2texoctal(lay_it->second.N) << "}%" << endl;
   }
   PAGE.precision(6);
-  PAGE << "\\setbox\\mapbox=\\hbox to " << HS << "bp{%" << std::endl;
+  PAGE << "\\setbox\\mapbox=\\hbox to " << HS << "bp{%" << endl;
   PAGE.precision(2);
   PAGE << "\\rlap{\\pdfrefxform\\" << tex_Sname(u2str(sheet_it->id)) << 
-          "}%" << std::endl;
+          "}%" << endl;
 
   // map hyperlinks
   int lw = 25;
@@ -579,46 +580,46 @@ void compose_page(std::list<sheetrecord>::iterator sheet_it, std::ofstream& PAGE
   
 
   PAGE.precision(6);
-  PAGE << "\\hfil}\\ht\\mapbox=" << VS << "bp%" << std::endl;
+  PAGE << "\\hfil}\\ht\\mapbox=" << VS << "bp%" << endl;
   PAGE.precision(2);
 
   PAGE << "\\pagelabel={" << grid_name(LAYOUT.labely,-sheet_it->namey) << 
                         " " << grid_name(LAYOUT.labelx,sheet_it->namex) <<
-                        "}%" << std::endl;
+                        "}%" << endl;
   if (LAYOUT.page_numbering) PAGE << "\\pagenum=" << 
-                             sheet_it->id << "%" << std::endl;
+                             sheet_it->id << "%" << endl;
     
 //    up and down links
 
   if (!sheet_it->jumpU.empty()) {
     PAGE << "\\pointerU={%\n";
-    for (std::set<int>::reverse_iterator l_it = sheet_it->jumpU.rbegin();
+    for (set<int>::reverse_iterator l_it = sheet_it->jumpU.rbegin();
                                     l_it != sheet_it->jumpU.rend(); l_it++) {
-      std::list<sheetrecord>::iterator s_it = 
+      list<sheetrecord>::iterator s_it = 
         find_sheet(*l_it,sheet_it->namex,sheet_it->namey);
       if (s_it == SHEET.end()) therror (("This can't happen!"));
       PAGE << utf2tex(LAYERHASH.find(*l_it)->second.N) << "|" <<
-           s_it->id << "|" << u2str(s_it->id) << "||%" << std::endl;
+           s_it->id << "|" << u2str(s_it->id) << "||%" << endl;
     }
     PAGE << "}%\n";
   }
-  else PAGE << "\\pointerU={notdef}%" << std::endl;
+  else PAGE << "\\pointerU={notdef}%" << endl;
 
   if (!sheet_it->jumpD.empty()) {
     PAGE << "\\pointerD={%\n";
-    for (std::set<int>::reverse_iterator l_it = sheet_it->jumpD.rbegin();
+    for (set<int>::reverse_iterator l_it = sheet_it->jumpD.rbegin();
                                     l_it != sheet_it->jumpD.rend(); l_it++) {
-      std::list<sheetrecord>::iterator s_it = 
+      list<sheetrecord>::iterator s_it = 
         find_sheet(*l_it,sheet_it->namex,sheet_it->namey);
       if (s_it == SHEET.end()) therror (("This can't happen!"));
       PAGE << utf2tex(LAYERHASH.find(*l_it)->second.N) << "|" <<
-           s_it->id << "|" << u2str(s_it->id) << "||%" << std::endl;
+           s_it->id << "|" << u2str(s_it->id) << "||%" << endl;
     }
     PAGE << "}%\n";
   }
-  else PAGE << "\\pointerD={notdef}%" << std::endl;
+  else PAGE << "\\pointerD={notdef}%" << endl;
 
-  PAGE << "\\pagename={" << utf2tex(lay_it->second.N) << "}%" << std::endl;
+  PAGE << "\\pagename={" << utf2tex(lay_it->second.N) << "}%" << endl;
 
   // pointers to neighbouring pages
   if (LAYOUT.page_numbering) {
@@ -632,7 +633,7 @@ void compose_page(std::list<sheetrecord>::iterator sheet_it, std::ofstream& PAGE
     else PAGE << "\\pointerS=0%\n";
   }
 
-  PAGE << "\\setbox\\navbox=\\hbox{%" << std::endl;
+  PAGE << "\\setbox\\navbox=\\hbox{%" << endl;
   // navigator hyperlinks
   int nav_x = 2*LAYOUT.nav_right+1;
   int nav_y = 2*LAYOUT.nav_up+1;
@@ -641,7 +642,7 @@ void compose_page(std::list<sheetrecord>::iterator sheet_it, std::ofstream& PAGE
   for (int i=-LAYOUT.nav_right; i <= LAYOUT.nav_right; i++) {
     for (int j=-LAYOUT.nav_up; j <= LAYOUT.nav_up; j++) {
       if (i!=0 || j!=0) {
-        std::string tmp = xyz2str(sheet_it->layer,
+        string tmp = xyz2str(sheet_it->layer,
                              sheet_it->namex+i,sheet_it->namey+j);
         if (SHEET_JMP.count(tmp) > 0) {
           PAGE << "\\flatlink{" << HSN*(i+LAYOUT.nav_right)/nav_x <<
@@ -653,22 +654,22 @@ void compose_page(std::list<sheetrecord>::iterator sheet_it, std::ofstream& PAGE
     }
   }
   
-  PAGE << "\\pdfrefxform\\" << tex_Nname(u2str(sheet_it->id)) << "}%" << std::endl;
+  PAGE << "\\pdfrefxform\\" << tex_Nname(u2str(sheet_it->id)) << "}%" << endl;
 
-  PAGE << "\\dopage\\eject" << std::endl;
+  PAGE << "\\dopage\\eject" << endl;
 }
 
-void print_page_bg(std::ofstream& PAGEDEF) {
+void print_page_bg(ofstream& PAGEDEF) {
   if (! LAYOUT.transparent_map_bg) {
 
     // bg rectangle
     PAGEDEF << "\\PL{q " << LAYOUT.col_background.to_pdfliteral(fillstroke::fill) <<
-                     " 0 0 " << HS << " " << VS << " re f Q}%" << std::endl;
+                     " 0 0 " << HS << " " << VS << " re f Q}%" << endl;
   }
 }
 
-void print_page_bg_scraps(int layer, std::ofstream& PAGEDEF, 
-               std::list<sheetrecord>::iterator sheet_it = std::list<sheetrecord>::iterator()) {
+void print_page_bg_scraps(int layer, ofstream& PAGEDEF, 
+               list<sheetrecord>::iterator sheet_it = list<sheetrecord>::iterator()) {
   // if transparency is used, all scraps should be filled white 
   // on the coloured background, just before preview_down is displayed
   // and transparency is turned on
@@ -682,8 +683,8 @@ void print_page_bg_scraps(int layer, std::ofstream& PAGEDEF,
   if (LAYOUT.transparency ) {
 
     double HSHIFT=0, VSHIFT=0, xc = 0, yc = 0;
-    std::map < int,std::set<std::string> > LEVEL;
-    std::set <std::string> used_scraps;
+    map < int,set<string> > LEVEL;
+    set <string> used_scraps;
     if (mode == ATLAS) {
       HSHIFT = LAYOUT.hsize * sheet_it->namex + LAYOUT.hoffset - LAYOUT.overlap;
       VSHIFT = LAYOUT.vsize * sheet_it->namey + LAYOUT.voffset - LAYOUT.overlap; 
@@ -695,35 +696,35 @@ void print_page_bg_scraps(int layer, std::ofstream& PAGEDEF,
       LEVEL = ((*(LAYERHASH.find(layer))).second).scraps;
     }
 
-    PAGEDEF << "\\PL{q " << black2pdf(0, fillstroke::fill) << "}%" << std::endl;      // white background of the scrap
-    for (std::map < int,std::set<std::string> >::iterator I = LEVEL.begin();
+    PAGEDEF << "\\PL{q " << black2pdf(0, fillstroke::fill) << "}%" << endl;      // white background of the scrap
+    for (map < int,set<string> >::iterator I = LEVEL.begin();
                                        I != LEVEL.end(); I++) {
       used_scraps = (*I).second;
       // scrap backgrounds
-      for (std::list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
+      for (list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
         if (used_scraps.count(K->name) > 0 && K->I != "") {
           xc = K->I1; yc = K->I2;
           xc -= HSHIFT; yc -= VSHIFT;
           PAGEDEF << "\\PB{" << xc << "}{" << yc << "}{" <<
-                  tex_get_ref(tex_Xname("I"+(K->name))) << "}%" << std::endl;
+                  tex_get_ref(tex_Xname("I"+(K->name))) << "}%" << endl;
         }
       }
     }
-    PAGEDEF << "\\PL{Q}%" << std::endl;         // end of white color for filled bg
+    PAGEDEF << "\\PL{Q}%" << endl;         // end of white color for filled bg
   }
 }
 
-void print_surface_bitmaps (std::ofstream &PAGEDEF, double shiftx, double shifty) {
+void print_surface_bitmaps (ofstream &PAGEDEF, double shiftx, double shifty) {
   if (LAYOUT.transparency || LAYOUT.OCG) {
     if (mode == MAP)
-      PAGEDEF << "\\setbox\\xxx=\\hbox to\\adjustedHS{%" << std::endl;
+      PAGEDEF << "\\setbox\\xxx=\\hbox to\\adjustedHS{%" << endl;
     else
-      PAGEDEF << "\\setbox\\xxx=\\hbox to" << HS << "bp{%" << std::endl;
-    PAGEDEF << "\\PL{/GS2 gs}%" << std::endl;
+      PAGEDEF << "\\setbox\\xxx=\\hbox to" << HS << "bp{%" << endl;
+    PAGEDEF << "\\PL{/GS2 gs}%" << endl;
   }
   int i = 1;
   PAGEDEF.precision(6);
-  for (std::list<surfpictrecord>::iterator I = SURFPICTLIST.begin();
+  for (list<surfpictrecord>::iterator I = SURFPICTLIST.begin();
                                       I != SURFPICTLIST.end(); I++) {
     if (mode == MAP && (LAYOUT.transparency || LAYOUT.OCG)) {
       PAGEDEF << "\\bitmapcorr{";
@@ -733,15 +734,15 @@ void print_surface_bitmaps (std::ofstream &PAGEDEF, double shiftx, double shifty
     PAGEDEF << 
           I->xx << "}{" << I->yx << "}{" << I->xy << "}{" << I->yy << "}{" << 
           I->dx - shiftx << "}{" << I->dy - shifty << 
-          "}{\\" << tex_BMPname(u2str(i)) << "}%" << std::endl;
+          "}{\\" << tex_BMPname(u2str(i)) << "}%" << endl;
     i++;
   };
   PAGEDEF.precision(2);
   if (LAYOUT.transparency || LAYOUT.OCG) {
     if (mode == MAP)
-      PAGEDEF << "\\hfill}\\ht\\xxx=\\adjustedVS\\dp\\xxx=0bp" << std::endl;
+      PAGEDEF << "\\hfill}\\ht\\xxx=\\adjustedVS\\dp\\xxx=0bp" << endl;
     else
-      PAGEDEF << "\\hfill}\\ht\\xxx="<< VS << "bp\\dp\\xxx=0bp" << std::endl;
+      PAGEDEF << "\\hfill}\\ht\\xxx="<< VS << "bp\\dp\\xxx=0bp" << endl;
     PAGEDEF << "\\immediate\\pdfxform ";
     PAGEDEF << "attr{";
     if (LAYOUT.transparency) PAGEDEF << "/Group \\the\\attrid\\space 0 R ";
@@ -749,9 +750,9 @@ void print_surface_bitmaps (std::ofstream &PAGEDEF, double shiftx, double shifty
     PAGEDEF << "} ";
     PAGEDEF << "resources{/ExtGState \\the\\resid\\space 0 R}";
     if (mode == MAP)
-      PAGEDEF << "\\xxx\\PB{-\\adjustedX}{-\\adjustedY}{\\pdflastxform}%" << std::endl;
+      PAGEDEF << "\\xxx\\PB{-\\adjustedX}{-\\adjustedY}{\\pdflastxform}%" << endl;
     else
-      PAGEDEF << "\\xxx\\PB{0}{0}{\\pdflastxform}%" << std::endl;
+      PAGEDEF << "\\xxx\\PB{0}{0}{\\pdflastxform}%" << endl;
   }
 }
 
@@ -766,7 +767,7 @@ paired rotatedaround(paired x,paired o, double th) {
 }
 
 
-void print_grid_pdf(std::ofstream& PAGEDEF, double LLX, double LLY, double origMINX,double origMINY,double origMAXX, double origMAXY) {
+void print_grid_pdf(ofstream& PAGEDEF, double LLX, double LLY, double origMINX,double origMINY,double origMAXX, double origMAXY) {
   if (LAYOUT.grid == 0) return;
   PAGEDEF << "\\PL{q}";
   
@@ -793,10 +794,10 @@ void print_grid_pdf(std::ofstream& PAGEDEF, double LLX, double LLY, double origM
   lrrot = rotatedaround(lr,origin,-LAYOUT.gridrot);
   ulrot = rotatedaround(ul,origin,-LAYOUT.gridrot);
   
-  llnew.x = std::min(std::min(llrot.x, urrot.x), std::min(lrrot.x, ulrot.x));
-  llnew.y = std::min(std::min(llrot.y, urrot.y), std::min(lrrot.y, ulrot.y));
-  urnew.x = std::max(std::max(llrot.x, urrot.x), std::max(lrrot.x, ulrot.x));
-  urnew.y = std::max(std::max(llrot.y, urrot.y), std::max(lrrot.y, ulrot.y));
+  llnew.x = min(min(llrot.x, urrot.x), min(lrrot.x, ulrot.x));
+  llnew.y = min(min(llrot.y, urrot.y), min(lrrot.y, ulrot.y));
+  urnew.x = max(max(llrot.x, urrot.x), max(lrrot.x, ulrot.x));
+  urnew.y = max(max(llrot.y, urrot.y), max(lrrot.y, ulrot.y));
   
 /*  na odladenie
 PAGEDEF << "\\PL{ " << llrot.x-LLX << " " << llrot.y-LLY << " m " << lrrot.x-LLX << " " << lrrot.y-LLY << " l S}";
@@ -816,7 +817,7 @@ PAGEDEF << "\\PL{ " << rotatedaround(urnew,origin,LAYOUT.gridrot).x-LLX << " " <
        rotatedaround(urnew,origin,LAYOUT.gridrot).y-LLY << " l S}";
 */
   
-//cout << "***" << LAYOUT.hgridsize << std::endl;
+//cout << "***" << LAYOUT.hgridsize << endl;
 
   double grid_init_x = LAYOUT.hgridsize * floor ((llnew.x-origin.x)/LAYOUT.hgridsize) + origin.x;
   double grid_init_y = LAYOUT.vgridsize * floor ((llnew.y-origin.y)/LAYOUT.vgridsize) + origin.y;
@@ -853,7 +854,7 @@ PAGEDEF << "\\PL{ " << rotatedaround(urnew,origin,LAYOUT.gridrot).x-LLX << " " <
         PAGEDEF << "\\PL{q}";
 	PAGEDEF << "\\PL{" << cosr << " " << sinr << " " << -sinr << " " << cosr << " " << out.x << " " << out.y << " cm}";
 	PAGEDEF << "\\PB{0}{0}{" << tex_get_ref(tex_Wname("grid") + u2str(elem+1)) << "}";
-        PAGEDEF << "\\PL{Q}%" << std::endl;
+        PAGEDEF << "\\PL{Q}%" << endl;
 
         if (LAYOUT.grid_coord_freq==2 || (LAYOUT.grid_coord_freq==1 && elem!=4)) {
           tmp.x = i;
@@ -864,9 +865,9 @@ PAGEDEF << "\\PL{ " << rotatedaround(urnew,origin,LAYOUT.gridrot).x-LLX << " " <
           PAGEDEF << "\\PL{q}";
           PAGEDEF << "\\PL{" << cosr << " " << sinr << " " << -sinr << " " << cosr << " " << out.x << " " << out.y << " cm}";
 	  PAGEDEF << "\\gridcoord{" << (row == 2 ? (col == 2 ? 1 : 3) : (col == 2 ? 7 : 9)) << 
-	      "}{$(" << std::setprecision(0) << 
+	      "}{$(" << setprecision(0) << 
 	      G_real_init_x+ii*LAYOUT.XS << "," << 
-              G_real_init_y+jj*LAYOUT.YS << std::setprecision(2) << ")$}%" << std::endl;
+              G_real_init_y+jj*LAYOUT.YS << setprecision(2) << ")$}%" << endl;
           PAGEDEF << "\\PL{Q}";
         }
 
@@ -885,41 +886,41 @@ PAGEDEF << "\\PL{ " << rotatedaround(urnew,origin,LAYOUT.gridrot).x-LLX << " " <
 	elem = col + 3*row;
 	PAGEDEF << "\\PB{" << i-LLX+LAYOUT.gridcell[elem].x << "}{" << 
 			      j-LLY+LAYOUT.gridcell[elem].y << "}{" <<
-			      tex_get_ref(tex_Wname("grid") + u2str(elem+1)) << "}%" << std::endl;
+			      tex_get_ref(tex_Wname("grid") + u2str(elem+1)) << "}%" << endl;
 
         if (col == 0 && LAYOUT.grid_coord_freq > 0) {
           PAGEDEF << "\\PL{q}";
           PAGEDEF << "\\PL{1 0 0 1 " << i-LLX << " " << j-LLY << " cm}";
           PAGEDEF << "\\gridcoord{" << (row==2?3:9) << "}{$" << 
-	      std::setprecision(0) << G_real_init_y+jj*LAYOUT.YS << 
-	      std::setprecision(2)<< "$}";
-          PAGEDEF << "\\PL{Q}%" << std::endl;
+	      setprecision(0) << G_real_init_y+jj*LAYOUT.YS << 
+	      setprecision(2)<< "$}";
+          PAGEDEF << "\\PL{Q}%" << endl;
 	}
         if (col == 2 && LAYOUT.grid_coord_freq == 2) {
           PAGEDEF << "\\PL{q}";
           PAGEDEF << "\\PL{1 0 0 1 " << i-LLX << " " << j-LLY << " cm}";
           PAGEDEF << "\\gridcoord{" << (row==2?1:7) << "}{$" << 
-	      std::setprecision(0) << G_real_init_y+jj*LAYOUT.YS <<
-	      std::setprecision(2)<< "$}";
-          PAGEDEF << "\\PL{Q}%" << std::endl;
+	      setprecision(0) << G_real_init_y+jj*LAYOUT.YS <<
+	      setprecision(2)<< "$}";
+          PAGEDEF << "\\PL{Q}%" << endl;
         }
 
       }
     }
   } 
 
-  PAGEDEF << "\\PL{Q}%" << std::endl;
+  PAGEDEF << "\\PL{Q}%" << endl;
 }
 
 
 
-void print_map(int layer, std::ofstream& PAGEDEF, 
-               std::list<sheetrecord>::iterator sheet_it = std::list<sheetrecord>::iterator()){
+void print_map(int layer, ofstream& PAGEDEF, 
+               list<sheetrecord>::iterator sheet_it = list<sheetrecord>::iterator()){
   double HSHIFT=0, VSHIFT=0, xc = 0, yc = 0;
-  std::map < int,std::set<std::string> > LEVEL;
-  std::set <std::string> page_text_scraps,used_scraps;
-  std::string buffer;
-  std::deque<std::string> thstack;
+  map < int,set<string> > LEVEL;
+  set <string> page_text_scraps,used_scraps;
+  string buffer;
+  deque<string> thstack;
 
   if (mode == ATLAS) {
     HSHIFT = LAYOUT.hsize * sheet_it->namex + LAYOUT.hoffset - LAYOUT.overlap;
@@ -932,10 +933,10 @@ void print_map(int layer, std::ofstream& PAGEDEF,
     LEVEL = ((*(LAYERHASH.find(layer))).second).scraps;
   }
 
-  for (std::map < int,std::set<std::string> >::iterator I = LEVEL.begin();
+  for (map < int,set<string> >::iterator I = LEVEL.begin();
                                          I != LEVEL.end(); I++) {
     used_scraps = (*I).second;
-    for (std::list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
+    for (list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
        if (used_scraps.count(K->name) > 0 && K->P != "") 
           page_text_scraps.insert(K->name);
     }
@@ -952,74 +953,74 @@ void print_map(int layer, std::ofstream& PAGEDEF,
     print_preview(0,PAGEDEF,HSHIFT,VSHIFT,sheet_it);
   }
   
-  for (std::map < int,std::set<std::string> >::iterator I = LEVEL.begin();
+  for (map < int,set<string> >::iterator I = LEVEL.begin();
                                          I != LEVEL.end(); I++) {
     used_scraps = (*I).second;
 
     if (LAYOUT.transparency) {                 // transparency group beginning
-      PAGEDEF << "\\setbox\\xxx=\\hbox to " << HS << "bp{%" << std::endl;
-      PAGEDEF << "\\PL{/GS1 gs}%" << std::endl;     // beginning of transparency
+      PAGEDEF << "\\setbox\\xxx=\\hbox to " << HS << "bp{%" << endl;
+      PAGEDEF << "\\PL{/GS1 gs}%" << endl;     // beginning of transparency
     }
 
-//    PAGEDEF << "\\PL{q 1 g}%" << std::endl;         // white background of the scrap
-    for (std::list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
+//    PAGEDEF << "\\PL{q 1 g}%" << endl;         // white background of the scrap
+    for (list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
       if (used_scraps.count(K->name) > 0 && K->I != "") {
         PAGEDEF << "\\PL{q ";
         if (!K->col_scrap.is_defined()) {
           PAGEDEF << LAYOUT.col_foreground.to_pdfliteral(fillstroke::fill) <<   // background of the scrap
-                     "}%" << std::endl;
+                     "}%" << endl;
         }
         else {
-          PAGEDEF << K->col_scrap.to_pdfliteral(fillstroke::fill) << "}%" << std::endl;
+          PAGEDEF << K->col_scrap.to_pdfliteral(fillstroke::fill) << "}%" << endl;
         }
         xc = K->I1; yc = K->I2;
         xc -= HSHIFT; yc -= VSHIFT;
         PAGEDEF << "\\PB{" << xc << "}{" << yc << "}{" <<
-                tex_get_ref(tex_Xname("I"+(K->name))) << "}%" << std::endl;
+                tex_get_ref(tex_Xname("I"+(K->name))) << "}%" << endl;
 
-        PAGEDEF << "\\PL{Q}%" << std::endl;            // end of white color for filled bg
+        PAGEDEF << "\\PL{Q}%" << endl;            // end of white color for filled bg
       }
     }
     
     // sketches
     PAGEDEF.precision(6);
-    for (std::list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
+    for (list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
       if (used_scraps.count(K->name) > 0) {
-        for (std::list<surfpictrecord>::iterator I_sk = K->SKETCHLIST.begin();
+        for (list<surfpictrecord>::iterator I_sk = K->SKETCHLIST.begin();
                                             I_sk != K->SKETCHLIST.end(); I_sk++) {
-          PAGEDEF << "\\pdfximage{" << (std::string) I_sk->filename << "}%" << std::endl;
+          PAGEDEF << "\\pdfximage{" << (string) I_sk->filename << "}%" << endl;
           PAGEDEF << "\\bitmap{" <<
               I_sk->xx << "}{" << I_sk->yx << "}{" << I_sk->xy << "}{" << I_sk->yy << "}{" << 
               I_sk->dx - HSHIFT << "}{" << I_sk->dy - VSHIFT  << 
-              "}{\\pdflastximage}%" << std::endl;
+              "}{\\pdflastximage}%" << endl;
         };
       };
     }
     PAGEDEF.precision(2);
     // end of sketches
 
-    for (std::list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
+    for (list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
       if (used_scraps.count(K->name) > 0 && K->G != "") {
         xc = K->G1; yc = K->G2;
         xc -= HSHIFT; yc -= VSHIFT;
         PAGEDEF << "\\PB{" << xc << "}{" << yc << "}{" <<
-                tex_get_ref(tex_Xname("G"+(K->name))) << "}%" << std::endl;
+                tex_get_ref(tex_Xname("G"+(K->name))) << "}%" << endl;
       };
     }
 
     if (LAYOUT.transparency) {
-      PAGEDEF << "\\PL{/GS0 gs}%" << std::endl;      // end of default transparency
+      PAGEDEF << "\\PL{/GS0 gs}%" << endl;      // end of default transparency
     }
 
     PAGEDEF << "\\PL{q 0 0 m " << HS << " 0 l " << HS << " " << 
                                   VS << " l 0 " << VS << " l 0 0 l}";
                                // beginning of the text clipping path definition
 
-    for (std::list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
+    for (list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
       if (page_text_scraps.count(K->name) > 0 && 
           K->P != "" && K->level >= (I->first)) {
         xc = HSHIFT - K->S1; yc = VSHIFT - K->S2;
-        std::ifstream G((K->P).c_str());
+        ifstream G((K->P).c_str());
         if(!G) therror((IOerr(K->P)));
         while(G >> buffer) {
           if ((buffer == "m") || (buffer == "l") || (buffer == "c")) {
@@ -1028,7 +1029,7 @@ void print_map(int layer, std::ofstream& PAGEDEF,
               PAGEDEF << atof(thstack[i].c_str())-xc << " " << 
                          atof(thstack[i+1].c_str())-yc << " ";
             }
-            PAGEDEF << buffer << "}%" << std::endl;
+            PAGEDEF << buffer << "}%" << endl;
             thstack.clear();
           }
           else {
@@ -1042,42 +1043,42 @@ void print_map(int layer, std::ofstream& PAGEDEF,
   
     PAGEDEF << "\\PL{h W n}";  // end of text clipping path definition
     
-    for (std::list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
+    for (list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
       if (used_scraps.count(K->name) > 0 && K->F != "") {
         xc = K->F1; yc = K->F2;
         xc -= HSHIFT; yc -= VSHIFT;
         PAGEDEF << "\\PB{" << xc << "}{" << yc << "}{" <<
-                tex_get_ref(tex_Xname(K->name)) << "}%" << std::endl;
+                tex_get_ref(tex_Xname(K->name)) << "}%" << endl;
       };
     }
    
-    for (std::list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
+    for (list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
       if (used_scraps.count(K->name) > 0 && K->E != "") {
         xc = K->E1; yc = K->E2;
         xc -= HSHIFT; yc -= VSHIFT;
         PAGEDEF << "\\PB{" << xc << "}{" << yc << "}{" <<
-                tex_get_ref(tex_Xname("E"+(K->name))) << "}%" << std::endl;
+                tex_get_ref(tex_Xname("E"+(K->name))) << "}%" << endl;
       };
     }
    
     PAGEDEF << "\\PL{Q}";   // end of clipping by text
 
-    for (std::list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
+    for (list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
       if (used_scraps.count(K->name) > 0 && K->X != "") {
         xc = K->X1; yc = K->X2;
         xc -= HSHIFT; yc -= VSHIFT;
         PAGEDEF << "\\PB{" << xc << "}{" << yc << "}{" <<
-                tex_get_ref(tex_Xname("X"+(K->name))) << "}%" << std::endl;
+                tex_get_ref(tex_Xname("X"+(K->name))) << "}%" << endl;
       };
     }
     if (LAYOUT.transparency) {
-      PAGEDEF << "\\hfill}\\ht\\xxx=" << VS << "bp\\dp\\xxx=0bp" << std::endl;
+      PAGEDEF << "\\hfill}\\ht\\xxx=" << VS << "bp\\dp\\xxx=0bp" << endl;
       PAGEDEF << "\\immediate\\pdfxform ";
       PAGEDEF << "attr{/Group \\the\\attrid\\space 0 R} ";
       PAGEDEF << "resources{/ExtGState \\the\\resid\\space 0 R";
       if (icc_used()) PAGEDEF << " /ColorSpace <<" << icc2pdfresources() << ">> ";
       PAGEDEF << "}";
-      PAGEDEF << "\\xxx\\PB{0}{0}{\\pdflastxform}%" << std::endl;
+      PAGEDEF << "\\xxx\\PB{0}{0}{\\pdflastxform}%" << endl;
     }
   }
   
@@ -1091,10 +1092,10 @@ void print_map(int layer, std::ofstream& PAGEDEF,
   }
 }
 
-void print_navigator(std::ofstream& P, std::list<sheetrecord>::iterator sheet_it) {
-  std::set<std::string> NAV_SCRAPS;
-  std::set<int> used_layers;
-  std::set<std::string> used_scraps;
+void print_navigator(ofstream& P, list<sheetrecord>::iterator sheet_it) {
+  set<string> NAV_SCRAPS;
+  set<int> used_layers;
+  set<string> used_scraps;
   int nav_x = 2*LAYOUT.nav_right+1;
   int nav_y = 2*LAYOUT.nav_up+1;
   double HSN = LAYOUT.hsize / LAYOUT.nav_factor * nav_x;
@@ -1106,24 +1107,24 @@ void print_navigator(std::ofstream& P, std::list<sheetrecord>::iterator sheet_it
   P << 1/LAYOUT.nav_factor << " 0 0 " << 1/LAYOUT.nav_factor << " 0 0 cm}%\n";
   P.precision(2);
 
-  std::map<int,layerrecord>::iterator lay_it = LAYERHASH.find(sheet_it->layer);
+  map<int,layerrecord>::iterator lay_it = LAYERHASH.find(sheet_it->layer);
   if (lay_it == LAYERHASH.end()) therror (("This can't happen!"));
 
   NAV_SCRAPS.clear();
   if (!lay_it->second.D.empty()) {
     P << "\\PL{" << black2pdf(0.2, fillstroke::fill) << "}%\n";
     used_layers = lay_it->second.D;
-    for (std::set<int>::iterator I=used_layers.begin(); I != used_layers.end(); I++) {
+    for (set<int>::iterator I=used_layers.begin(); I != used_layers.end(); I++) {
       for (int i = sheet_it->namex-LAYOUT.nav_right; 
                i <= sheet_it->namex+LAYOUT.nav_right; i++) {
         for (int j = sheet_it->namey-LAYOUT.nav_up; 
                  j <= sheet_it->namey+LAYOUT.nav_up; j++) {
           used_scraps.clear();
-          std::map<std::string,std::set<std::string> >::iterator pr_it = 
+          map<string,set<string> >::iterator pr_it = 
             preview.find(xyz2str(*I,i,j));
           if (pr_it != preview.end()) used_scraps = pr_it->second;
           if (!used_scraps.empty()) {
-            for (std::list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
+            for (list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
               if (used_scraps.count(K->name) > 0 && 
                            NAV_SCRAPS.count(K->name) == 0 &&
                            K->I != "" && K->sect == 0) {
@@ -1133,7 +1134,7 @@ void print_navigator(std::ofstream& P, std::list<sheetrecord>::iterator sheet_it
                 yc -= LAYOUT.vsize * (sheet_it->namey - LAYOUT.nav_up) + 
                       LAYOUT.voffset; 
                 P << "\\PB{" << xc << "}{" << yc << "}{" <<
-                        tex_get_ref(tex_Xname("I"+(K->name))) << "}%" << std::endl;
+                        tex_get_ref(tex_Xname("I"+(K->name))) << "}%" << endl;
                 NAV_SCRAPS.insert(K->name);
               }
             }
@@ -1149,11 +1150,11 @@ void print_navigator(std::ofstream& P, std::list<sheetrecord>::iterator sheet_it
     for (int j = sheet_it->namey-LAYOUT.nav_up; 
              j <= sheet_it->namey+LAYOUT.nav_up; j++) {
       used_scraps.clear();
-      std::map<std::string,std::set<std::string> >::iterator pr_it = 
+      map<string,set<string> >::iterator pr_it = 
         preview.find(xyz2str(sheet_it->layer,i,j));
       if (pr_it != preview.end()) used_scraps = pr_it->second;
       if (!used_scraps.empty()) {
-        for (std::list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
+        for (list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
           if (used_scraps.count(K->name) > 0 && 
                        NAV_SCRAPS.count(K->name) == 0 &&
                        K->I != "" && K->sect == 0) {
@@ -1163,7 +1164,7 @@ void print_navigator(std::ofstream& P, std::list<sheetrecord>::iterator sheet_it
             yc -= LAYOUT.vsize * (sheet_it->namey - LAYOUT.nav_up) + 
                   LAYOUT.voffset; 
             P << "\\PB{" << xc << "}{" << yc << "}{" <<
-                    tex_get_ref(tex_Xname("I"+(K->name))) << "}%" << std::endl;
+                    tex_get_ref(tex_Xname("I"+(K->name))) << "}%" << endl;
             NAV_SCRAPS.insert(K->name);
           }
         }
@@ -1174,17 +1175,17 @@ void print_navigator(std::ofstream& P, std::list<sheetrecord>::iterator sheet_it
   if (!lay_it->second.U.empty()) {
     P << "\\PL{0.2 w}%\n";
     used_layers = lay_it->second.U;
-    for (std::set<int>::iterator I=used_layers.begin(); I != used_layers.end(); I++) {
+    for (set<int>::iterator I=used_layers.begin(); I != used_layers.end(); I++) {
       for (int i = sheet_it->namex-LAYOUT.nav_right; 
                i <= sheet_it->namex+LAYOUT.nav_right; i++) {
         for (int j = sheet_it->namey-LAYOUT.nav_up; 
                  j <= sheet_it->namey+LAYOUT.nav_up; j++) {
           used_scraps.clear();
-          std::map<std::string,std::set<std::string> >::iterator pr_it = 
+          map<string,set<string> >::iterator pr_it = 
             preview.find(xyz2str(*I,i,j));
           if (pr_it != preview.end()) used_scraps = pr_it->second;
           if (!used_scraps.empty()) {
-            for (std::list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
+            for (list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
               if (used_scraps.count(K->name) > 0 && 
                            NAV_SCRAPS.count(K->name) == 0 &&
                            K->B != "" && K->sect == 0) {
@@ -1194,7 +1195,7 @@ void print_navigator(std::ofstream& P, std::list<sheetrecord>::iterator sheet_it
                 yc -= LAYOUT.vsize * (sheet_it->namey - LAYOUT.nav_up) + 
                       LAYOUT.voffset; 
                 P << "\\PB{" << xc << "}{" << yc << "}{" <<
-                        tex_get_ref(tex_Xname("B"+(K->name))) << "}%" << std::endl;
+                        tex_get_ref(tex_Xname("B"+(K->name))) << "}%" << endl;
                 NAV_SCRAPS.insert(K->name);
               }
             }
@@ -1220,11 +1221,11 @@ void print_navigator(std::ofstream& P, std::list<sheetrecord>::iterator sheet_it
   if (icc_used())  P << " resources{/ColorSpace <<" << icc2pdfresources() << ">>} ";
   P << "\\xxx\\newcount\\" <<
        tex_Nname(u2str(sheet_it->id)) << " \\" <<
-       tex_Nname(u2str(sheet_it->id)) << "=\\pdflastxform" << std::endl;
+       tex_Nname(u2str(sheet_it->id)) << "=\\pdflastxform" << endl;
 }
 
 
-void print_margins(std::ofstream& PAGEDEF) {
+void print_margins(ofstream& PAGEDEF) {
   PAGEDEF << "\\PL{q}";
 //  PAGEDEF << "\\PL{3 w 0 0 " << HS << " " << VS << " re S}";
   if (LAYOUT.overlap > 0) {
@@ -1239,105 +1240,105 @@ void print_margins(std::ofstream& PAGEDEF) {
                " " << VS << " l S}";
     PAGEDEF << "\\PL{" << i << " 0 m " << i << " " << VS << " l S}";
   }
-  PAGEDEF << "\\PL{Q}%" << std::endl;
+  PAGEDEF << "\\PL{Q}%" << endl;
 }
 
-void icc_check_file(std::string fname, std::string type) {
-  std::ifstream iccfile(fname, std::ios::binary);
+void icc_check_file(string fname, string type) {
+  ifstream iccfile(fname, ios::binary);
   if(!iccfile) therror((IOerr(fname)));
   char buffer[5];
   iccfile.seekg(16);
   iccfile.read(buffer,4);
-  if (type != std::string(buffer)) therror(((std::string("Invalid ICC profile type: expected ")+type+", got "+buffer).c_str()));
+  if (type != string(buffer)) therror(((string("Invalid ICC profile type: expected ")+type+", got "+buffer).c_str()));
 }
 
 void build_pages() {
   
-  std::ofstream PAGEDEF("th_pagedef.tex");
+  ofstream PAGEDEF("th_pagedef.tex");
   if(!PAGEDEF) therror(("Can't write file th_pagedef.tex"));
-  PAGEDEF.setf(std::ios::fixed, std::ios::floatfield);
+  PAGEDEF.setf(ios::fixed, ios::floatfield);
   PAGEDEF.precision(2);
 
-  std::ofstream PAGE("th_pages.tex");
+  ofstream PAGE("th_pages.tex");
   if(!PAGE) therror(("Can't write file th_pages.tex"));
-  PAGE.setf(std::ios::fixed, std::ios::floatfield);
+  PAGE.setf(ios::fixed, ios::floatfield);
   PAGE.precision(2);
 
-  std::ofstream PDFRES("th_resources.tex");
+  ofstream PDFRES("th_resources.tex");
   if(!PDFRES) therror(("Can't write file th_resources.tex"));
   if (LAYOUT.transparency || LAYOUT.OCG) {
     PDFRES << "\\ifnum\\pdftexversion<110\\pdfcatalog{ /Version /" <<
       (LAYOUT.OCG ? "1.5" : "1.4") << " }" << 
-      (LAYOUT.OCG ? "\\else\\pdfminorversion=5" : "") << "\\fi" << std::endl;
+      (LAYOUT.OCG ? "\\else\\pdfminorversion=5" : "") << "\\fi" << endl;
   }
 
   if (thcfg.reproducible_output) {
-    PDFRES << "\\ifx\\pdfsuppressptexinfo\\undefined\\else%" << std::endl;
-    PDFRES << "  \\pdfsuppressptexinfo=-1\\pdftrailerid{}\\pdfinfoomitdate=1%" << std::endl;
-    PDFRES << "\\fi%" << std::endl;
-    PDFRES << "\\pdfinfo{/Producer (pdfTeX)}%" << std::endl;
+    PDFRES << "\\ifx\\pdfsuppressptexinfo\\undefined\\else%" << endl;
+    PDFRES << "  \\pdfsuppressptexinfo=-1\\pdftrailerid{}\\pdfinfoomitdate=1%" << endl;
+    PDFRES << "\\fi%" << endl;
+    PDFRES << "\\pdfinfo{/Producer (pdfTeX)}%" << endl;
   } else {
-    PDFRES << "\\pdfinfo{/Creator (Therion " << THVERSION << ", MetaPost, TeX)}%" << std::endl;
+    PDFRES << "\\pdfinfo{/Creator (Therion " << THVERSION << ", MetaPost, TeX)}%" << endl;
   }
-  PDFRES << "\\pdfcatalog{ /ViewerPreferences << /DisplayDocTitle true /PrintScaling /None >> }" << std::endl;
+  PDFRES << "\\pdfcatalog{ /ViewerPreferences << /DisplayDocTitle true /PrintScaling /None >> }" << endl;
 
-  if(ENC_NEW.NFSS != 0) PDFRES << "\\input thfonts.map" << std::endl;
+  if(ENC_NEW.NFSS != 0) PDFRES << "\\input thfonts.map" << endl;
 
-  PDFRES << "\\ifnum\\pdftexversion>139" << std::endl;
-  PDFRES << "  \\newread\\testin" << std::endl;
-  PDFRES << "  \\openin\\testin=glyphtounicode.tex" << std::endl;
-  PDFRES << "  \\ifeof\\testin\\message{No glyph to unicode mapping found!}\\else\\closein\\testin\\input glyphtounicode.tex\\pdfgentounicode=1\\fi" << std::endl;
-  PDFRES << "\\fi" << std::endl;
+  PDFRES << "\\ifnum\\pdftexversion>139" << endl;
+  PDFRES << "  \\newread\\testin" << endl;
+  PDFRES << "  \\openin\\testin=glyphtounicode.tex" << endl;
+  PDFRES << "  \\ifeof\\testin\\message{No glyph to unicode mapping found!}\\else\\closein\\testin\\input glyphtounicode.tex\\pdfgentounicode=1\\fi" << endl;
+  PDFRES << "\\fi" << endl;
 
   if (LAYOUT.transparency) {
-    PDFRES << "\\opacity{" << LAYOUT.opacity << "}%" << std::endl;
-    PDFRES << "\\surfaceopacity{" << LAYOUT.surface_opacity << "}%" << std::endl;
+    PDFRES << "\\opacity{" << LAYOUT.opacity << "}%" << endl;
+    PDFRES << "\\surfaceopacity{" << LAYOUT.surface_opacity << "}%" << endl;
     PDFRES << "\\immediate\\pdfobj{ << /GS0 " <<
                  "<< /Type /ExtGState /ca 1 /BM /Normal >> " <<
            " /GS1 << /Type /ExtGState /ca \\the\\opacity\\space /BM /Normal >> " <<
-           " /GS2 << /Type /ExtGState /ca \\the\\surfaceopacity\\space /BM /Normal >> >> }" << std::endl;
-    PDFRES << "\\newcount\\resid\\resid=\\pdflastobj" << std::endl;
-    PDFRES << "\\immediate\\pdfobj{ << /S /Transparency /K true >> }" << std::endl;
-    PDFRES << "\\newcount\\attrid\\attrid=\\pdflastobj" << std::endl;
+           " /GS2 << /Type /ExtGState /ca \\the\\surfaceopacity\\space /BM /Normal >> >> }" << endl;
+    PDFRES << "\\newcount\\resid\\resid=\\pdflastobj" << endl;
+    PDFRES << "\\immediate\\pdfobj{ << /S /Transparency /K true >> }" << endl;
+    PDFRES << "\\newcount\\attrid\\attrid=\\pdflastobj" << endl;
   }
   else {
     PDFRES << "\\immediate\\pdfobj{ << /GS0 " <<
                  "<< /Type /ExtGState >> " <<
            " /GS1 << /Type /ExtGState >> " <<
-           " /GS2 << /Type /ExtGState >> >> }" << std::endl;
-    PDFRES << "\\newcount\\resid\\resid=\\pdflastobj" << std::endl;
+           " /GS2 << /Type /ExtGState >> >> }" << endl;
+    PDFRES << "\\newcount\\resid\\resid=\\pdflastobj" << endl;
   }
 
   if (LAYOUT.OCG) {
     PDFRES << "\\immediate\\pdfobj{ << /Type /OCG /Name <feff" << 
-      utf2texhex(std::string(thT("title preview above",LAYOUT.lang))) << 
-      "> >> }" << std::endl;
-    PDFRES << "\\newcount\\ocU\\ocU=\\pdflastobj" << std::endl;
+      utf2texhex(string(thT("title preview above",LAYOUT.lang))) << 
+      "> >> }" << endl;
+    PDFRES << "\\newcount\\ocU\\ocU=\\pdflastobj" << endl;
     PDFRES << "\\immediate\\pdfobj{ << /Type /OCG /Name <feff" <<
-      utf2texhex(std::string(thT("title preview below",LAYOUT.lang))) << 
-      "> >> }" << std::endl;
-    PDFRES << "\\newcount\\ocD\\ocD=\\pdflastobj" << std::endl;
+      utf2texhex(string(thT("title preview below",LAYOUT.lang))) << 
+      "> >> }" << endl;
+    PDFRES << "\\newcount\\ocD\\ocD=\\pdflastobj" << endl;
     PDFRES << "\\immediate\\pdfobj{ << /Type /OCG /Name <feff" <<
-      utf2texhex(std::string(thT("title surface bitmap",LAYOUT.lang))) << 
-      "> >> }" << std::endl;
-    PDFRES << "\\newcount\\ocSUR\\ocSUR=\\pdflastobj" << std::endl;
+      utf2texhex(string(thT("title surface bitmap",LAYOUT.lang))) << 
+      "> >> }" << endl;
+    PDFRES << "\\newcount\\ocSUR\\ocSUR=\\pdflastobj" << endl;
     if (mode == MAP) {
-      for (std::map<int,layerrecord>::iterator I = LAYERHASH.begin();
+      for (map<int,layerrecord>::iterator I = LAYERHASH.begin();
                                           I != LAYERHASH.end(); I++) {
         if (I->second.Z == 0) {
           PDFRES << "\\immediate\\pdfobj{ << /Type /OCG /Name <feff" <<
-            utf2texhex(I->second.N) << "> >> }" << std::endl;
+            utf2texhex(I->second.N) << "> >> }" << endl;
           PDFRES << "\\newcount\\oc" << u2str(I->first) << "\\oc" << 
-                     u2str(I->first) << "=\\pdflastobj" << std::endl;
+                     u2str(I->first) << "=\\pdflastobj" << endl;
         }
       }
     }
-    PDFRES << "\\pdfcatalog{ /OCProperties <<" << std::endl <<
+    PDFRES << "\\pdfcatalog{ /OCProperties <<" << endl <<
               "  /OCGs [";
     if (LAYOUT.surface == 2) PDFRES << "\\the\\ocSUR\\space0 R "; 
     PDFRES << "\\the\\ocU\\space0 R ";
     if (mode == MAP) {
-      for (std::map<int,layerrecord>::iterator I = LAYERHASH.begin();
+      for (map<int,layerrecord>::iterator I = LAYERHASH.begin();
                                           I != LAYERHASH.end(); I++) {
         if (I->second.Z == 0) 
           PDFRES << "\\the\\oc" << u2str(I->first) << "\\space 0 R ";
@@ -1345,13 +1346,13 @@ void build_pages() {
     }
     PDFRES << "\\the\\ocD\\space0 R ";
     if (LAYOUT.surface == 1) PDFRES << "\\the\\ocSUR\\space0 R "; 
-    PDFRES << "]" << std::endl <<
+    PDFRES << "]" << endl <<
               "  /D << /Name (Map layers) /ListMode /VisiblePages" << 
                      " /Order [";
     if (LAYOUT.surface == 2) PDFRES << "\\the\\ocSUR\\space0 R "; 
     PDFRES << "\\the\\ocU\\space0 R ";
     if (mode == MAP) {
-      for (std::map<int,layerrecord>::reverse_iterator I = LAYERHASH.rbegin();
+      for (map<int,layerrecord>::reverse_iterator I = LAYERHASH.rbegin();
                                           I != LAYERHASH.rend(); I++) {
         if (I->second.Z == 0) 
           PDFRES << "\\the\\oc" << u2str(I->first) << "\\space 0 R ";
@@ -1359,74 +1360,74 @@ void build_pages() {
     }
     PDFRES << "\\the\\ocD\\space0 R ";
     if (LAYOUT.surface == 1) PDFRES << "\\the\\ocSUR\\space0 R "; 
-    PDFRES << "] >>" << std::endl << ">> }" << std::endl;
+    PDFRES << "] >>" << endl << ">> }" << endl;
   }
 
   if (LAYOUT.doc_author != "") 
-    PDFRES << "\\pdfinfo{ /Author <feff" << utf2texhex(LAYOUT.doc_author) << ">}" << std::endl;
+    PDFRES << "\\pdfinfo{ /Author <feff" << utf2texhex(LAYOUT.doc_author) << ">}" << endl;
   if (LAYOUT.doc_subject != "") 
-    PDFRES << "\\pdfinfo{ /Subject <feff" << utf2texhex(LAYOUT.doc_subject) << ">}" << std::endl;
+    PDFRES << "\\pdfinfo{ /Subject <feff" << utf2texhex(LAYOUT.doc_subject) << ">}" << endl;
   if (LAYOUT.doc_keywords != "") 
-    PDFRES << "\\pdfinfo{ /Keywords <feff" << utf2texhex(LAYOUT.doc_keywords) << ">}" << std::endl;
+    PDFRES << "\\pdfinfo{ /Keywords <feff" << utf2texhex(LAYOUT.doc_keywords) << ">}" << endl;
   if (LAYOUT.doc_title != "") {
-    PDFRES << "\\pdfinfo{ /Title <feff" << utf2texhex(LAYOUT.doc_title) << ">}" << std::endl;
-//    PDFRES << "\\legendcavename={" << utf2tex(LAYOUT.doc_title) << "}" << std::endl;
+    PDFRES << "\\pdfinfo{ /Title <feff" << utf2texhex(LAYOUT.doc_title) << ">}" << endl;
+//    PDFRES << "\\legendcavename={" << utf2tex(LAYOUT.doc_title) << "}" << endl;
   }
 //  if (LAYOUT.doc_comment != "") {
-//    PDFRES << "\\legendcomment={" << utf2tex(LAYOUT.doc_comment) << "}" << std::endl;
+//    PDFRES << "\\legendcomment={" << utf2tex(LAYOUT.doc_comment) << "}" << endl;
 //  }
 
   if (!LEGENDLIST.empty()) {  // zmenit test na LAYOUT.legend???
-    PDFRES << "\\legendtrue" << std::endl;
+    PDFRES << "\\legendtrue" << endl;
   }
   else {
-    PDFRES << "\\legendfalse" << std::endl;
+    PDFRES << "\\legendfalse" << endl;
   }
   
   if (!COLORLEGENDLIST.empty()) {  
-    PDFRES << "\\colorlegendtrue" << std::endl;
+    PDFRES << "\\colorlegendtrue" << endl;
   }
   else {
-    PDFRES << "\\colorlegendfalse" << std::endl;
+    PDFRES << "\\colorlegendfalse" << endl;
   }
   
-  PDFRES << "\\legendwidth=" << LAYOUT.legend_width << "bp" << std::endl;
+  PDFRES << "\\legendwidth=" << LAYOUT.legend_width << "bp" << endl;
 
   if (LAYOUT.map_header_bg) {
-    PDFRES << "\\bgcolor={" << LAYOUT.col_background.to_pdfliteral(fillstroke::fill) << "}" << std::endl;
-    PDFRES << "\\legendbgfilltrue" << std::endl;
+    PDFRES << "\\bgcolor={" << LAYOUT.col_background.to_pdfliteral(fillstroke::fill) << "}" << endl;
+    PDFRES << "\\legendbgfilltrue" << endl;
   } 
-  else PDFRES << "\\legendbgfillfalse" << std::endl;
+  else PDFRES << "\\legendbgfillfalse" << endl;
 
   if (LAYOUT.icc_profile_cmyk != "") {
     icc_check_file(LAYOUT.icc_profile_cmyk, "CMYK");
-    PDFRES << "\\immediate\\pdfobj stream attr {/N 4 /Alternate /DeviceCMYK} file {" << LAYOUT.icc_profile_cmyk << "}" << std::endl;
-    PDFRES << "\\immediate\\pdfobj{[/ICCBased \\the\\pdflastobj\\space 0 R]}" << std::endl;
-    PDFRES << "\\newcount\\iccobjcmyk\\iccobjcmyk=\\the\\pdflastobj" << std::endl;
+    PDFRES << "\\immediate\\pdfobj stream attr {/N 4 /Alternate /DeviceCMYK} file {" << LAYOUT.icc_profile_cmyk << "}" << endl;
+    PDFRES << "\\immediate\\pdfobj{[/ICCBased \\the\\pdflastobj\\space 0 R]}" << endl;
+    PDFRES << "\\newcount\\iccobjcmyk\\iccobjcmyk=\\the\\pdflastobj" << endl;
   }
   if (LAYOUT.icc_profile_rgb != "") {
     icc_check_file(LAYOUT.icc_profile_rgb, "RGB ");
-    PDFRES << "\\immediate\\pdfobj stream attr {/N 3 /Alternate /DeviceRGB} file {" << LAYOUT.icc_profile_rgb << "}" << std::endl;
-    PDFRES << "\\immediate\\pdfobj{[/ICCBased \\the\\pdflastobj\\space 0 R]}" << std::endl;
-    PDFRES << "\\newcount\\iccobjrgb\\iccobjrgb=\\the\\pdflastobj" << std::endl;
+    PDFRES << "\\immediate\\pdfobj stream attr {/N 3 /Alternate /DeviceRGB} file {" << LAYOUT.icc_profile_rgb << "}" << endl;
+    PDFRES << "\\immediate\\pdfobj{[/ICCBased \\the\\pdflastobj\\space 0 R]}" << endl;
+    PDFRES << "\\newcount\\iccobjrgb\\iccobjrgb=\\the\\pdflastobj" << endl;
   }
   if (LAYOUT.icc_profile_gray != "") {
     icc_check_file(LAYOUT.icc_profile_gray, "GRAY");
-    PDFRES << "\\immediate\\pdfobj stream attr {/N 1 /Alternate /DeviceGray} file {" << LAYOUT.icc_profile_gray << "}" << std::endl;
-    PDFRES << "\\immediate\\pdfobj{[/ICCBased \\the\\pdflastobj\\space 0 R]}" << std::endl;
-    PDFRES << "\\newcount\\iccobjgray\\iccobjgray=\\the\\pdflastobj" << std::endl;
+    PDFRES << "\\immediate\\pdfobj stream attr {/N 1 /Alternate /DeviceGray} file {" << LAYOUT.icc_profile_gray << "}" << endl;
+    PDFRES << "\\immediate\\pdfobj{[/ICCBased \\the\\pdflastobj\\space 0 R]}" << endl;
+    PDFRES << "\\newcount\\iccobjgray\\iccobjgray=\\the\\pdflastobj" << endl;
   }
   PDFRES << "\\edef\\colorres{";
   if (icc_used()) PDFRES << "/ColorSpace <<" << icc2pdfresources() << ">>";
-  PDFRES << "}" << std::endl;
+  PDFRES << "}" << endl;
 
   // jednorazove vlozenie povrchovych obrazkov
   int i = 1;
-  for (std::list<surfpictrecord>::iterator I = SURFPICTLIST.begin();
+  for (list<surfpictrecord>::iterator I = SURFPICTLIST.begin();
                                       I != SURFPICTLIST.end(); I++) {
-    PAGEDEF << "\\pdfximage{" << (std::string) I->filename << "}%" << std::endl;
+    PAGEDEF << "\\pdfximage{" << (string) I->filename << "}%" << endl;
     PAGEDEF << "\\newcount\\" << tex_BMPname(u2str(i)) << "\\" <<
-               tex_BMPname(u2str(i)) << "=\\pdflastximage%" << std::endl;
+               tex_BMPname(u2str(i)) << "=\\pdflastximage%" << endl;
     i++;
   }
 
@@ -1436,7 +1437,7 @@ void build_pages() {
     HS = LAYOUT.hsize + 2*LAYOUT.overlap;
     VS = LAYOUT.vsize + 2*LAYOUT.overlap;
     if (LAYOUT.page_numbering) {
-      PAGE << "\\pagenumberingtrue" << std::endl;
+      PAGE << "\\pagenumberingtrue" << endl;
     }
   }
   else {
@@ -1456,121 +1457,121 @@ void build_pages() {
     VS = MAXY - MINY;
     if (HS>14000 || VS>14000) 
       therror(("Map is too large for PDF format. Try smaller scale!"));
-    PAGEDEF << "\\eject" << std::endl;
-    PAGEDEF << "\\hsize=" << HS << "bp" << std::endl;
-    PAGEDEF << "\\vsize=" << VS << "bp" << std::endl;
+    PAGEDEF << "\\eject" << endl;
+    PAGEDEF << "\\hsize=" << HS << "bp" << endl;
+    PAGEDEF << "\\vsize=" << VS << "bp" << endl;
     PAGEDEF << "\\pdfpagewidth=\\hsize\\advance\\pdfpagewidth by " <<
-                                             2*LAYOUT.overlap << "bp" << std::endl;
+                                             2*LAYOUT.overlap << "bp" << endl;
     PAGEDEF << "\\pdfpageheight=\\vsize\\advance\\pdfpageheight by " <<
-                                             2*LAYOUT.overlap << "bp" << std::endl;
-    PAGEDEF << "\\hoffset=0cm" << std::endl;
-    PAGEDEF << "\\voffset=0cm" << std::endl;
-    PAGEDEF << "\\pdfhorigin=" << LAYOUT.overlap << "bp" << std::endl;
-    PAGEDEF << "\\pdfvorigin=" << LAYOUT.overlap << "bp" << std::endl;
+                                             2*LAYOUT.overlap << "bp" << endl;
+    PAGEDEF << "\\hoffset=0cm" << endl;
+    PAGEDEF << "\\voffset=0cm" << endl;
+    PAGEDEF << "\\pdfhorigin=" << LAYOUT.overlap << "bp" << endl;
+    PAGEDEF << "\\pdfvorigin=" << LAYOUT.overlap << "bp" << endl;
   }
   
   if (mode == ATLAS) {
-    PAGEDEF << "\\newdimen\\overlap\\overlap=" << LAYOUT.overlap << "bp" << std::endl;
-    for (std::list<sheetrecord>::iterator I = SHEET.begin(); 
+    PAGEDEF << "\\newdimen\\overlap\\overlap=" << LAYOUT.overlap << "bp" << endl;
+    for (list<sheetrecord>::iterator I = SHEET.begin(); 
                                      I != SHEET.end(); I++) {
 
 //      cout << "ID: " << I->id << " Layer: " << I->layer << " X: " << 
-//           I->namex << " Y: " << I->namey << std::endl;
+//           I->namex << " Y: " << I->namey << endl;
 
 // cout << "*" << flush; 
 
-      PAGEDEF << "\\setbox\\xxx=\\hbox to "<< HS << "bp{%" << std::endl;
+      PAGEDEF << "\\setbox\\xxx=\\hbox to "<< HS << "bp{%" << endl;
 
       print_map(I->layer, PAGEDEF, I);
       print_margins(PAGEDEF);
 
-      PAGEDEF << "\\hfill}\\ht\\xxx=" << VS << "bp\\dp\\xxx=0bp" << std::endl;
+      PAGEDEF << "\\hfill}\\ht\\xxx=" << VS << "bp\\dp\\xxx=0bp" << endl;
       PAGEDEF << "\\immediate\\pdfxform";
       if (icc_used())  PAGEDEF << " resources{/ColorSpace <<" << icc2pdfresources() << ">>} ";
       PAGEDEF << "\\xxx\\newcount\\" << tex_Sname(u2str(I->id)) <<
-             " \\" << tex_Sname(u2str(I->id)) << "=\\pdflastxform" << std::endl;
+             " \\" << tex_Sname(u2str(I->id)) << "=\\pdflastxform" << endl;
 
       print_navigator(PAGEDEF,I);
       compose_page(I, PAGE);
     }
     if (icc_used()) {
       PDFRES << "\\edef\\thpdfpageres {/ColorSpace <<" << icc2pdfresources() << ">>}";
-      PDFRES << "\\pdfpageresources\\expandafter{\\thpdfpageres}" << std::endl;
+      PDFRES << "\\pdfpageresources\\expandafter{\\thpdfpageres}" << endl;
     }
   }
   else {
-    PAGEDEF << "\\newdimen\\x \\x=" << HS << "bp" << std::endl;
-    PAGEDEF << "\\newdimen\\y \\y=" << VS << "bp" << std::endl;
-    PAGEDEF << "\\setbox\\xxx=\\hbox to \\x{\\maplayout\\hfill}%\\dp\\xxx=0bp" << std::endl;
-    PAGEDEF << "\\advance\\x by \\extraE" << std::endl;
-    PAGEDEF << "\\advance\\x by \\extraW" << std::endl;
-    PAGEDEF << "\\advance\\y by \\extraN" << std::endl;
-    PAGEDEF << "\\advance\\y by \\extraS" << std::endl;
-    PAGEDEF << "\\newbox\\xxxx\\setbox\\xxxx=\\hbox to \\x{\\kern\\extraW\\raise\\extraS\\box\\xxx\\hss}%\\dp\\xxx=0bp" << std::endl;
-    PAGEDEF << "\\wd\\xxxx=\\x" << std::endl;
-    PAGEDEF << "\\ht\\xxxx=\\y" << std::endl;
+    PAGEDEF << "\\newdimen\\x \\x=" << HS << "bp" << endl;
+    PAGEDEF << "\\newdimen\\y \\y=" << VS << "bp" << endl;
+    PAGEDEF << "\\setbox\\xxx=\\hbox to \\x{\\maplayout\\hfill}%\\dp\\xxx=0bp" << endl;
+    PAGEDEF << "\\advance\\x by \\extraE" << endl;
+    PAGEDEF << "\\advance\\x by \\extraW" << endl;
+    PAGEDEF << "\\advance\\y by \\extraN" << endl;
+    PAGEDEF << "\\advance\\y by \\extraS" << endl;
+    PAGEDEF << "\\newbox\\xxxx\\setbox\\xxxx=\\hbox to \\x{\\kern\\extraW\\raise\\extraS\\box\\xxx\\hss}%\\dp\\xxx=0bp" << endl;
+    PAGEDEF << "\\wd\\xxxx=\\x" << endl;
+    PAGEDEF << "\\ht\\xxxx=\\y" << endl;
     PAGEDEF << "\\immediate\\pdfxform";
     if (icc_used())  PAGEDEF << " resources{/ColorSpace <<" << icc2pdfresources() << ">>} ";
-    PAGEDEF << "\\xxxx" << std::endl;
-    PAGEDEF << "\\newcount\\THmaplegend\\THmaplegend=\\pdflastxform" << std::endl;
+    PAGEDEF << "\\xxxx" << endl;
+    PAGEDEF << "\\newcount\\THmaplegend\\THmaplegend=\\pdflastxform" << endl;
 
-    PAGEDEF << "\\advance\\pdfhorigin by \\extraW" << std::endl;
-    PAGEDEF << "\\advance\\pdfvorigin by \\extraN" << std::endl;
-    PAGEDEF << "\\advance\\pdfpagewidth by \\extraW" << std::endl;
-    PAGEDEF << "\\advance\\pdfpagewidth by \\extraE" << std::endl;
-    PAGEDEF << "\\advance\\pdfpageheight by \\extraN" << std::endl;
-    PAGEDEF << "\\advance\\pdfpageheight by \\extraS" << std::endl;
+    PAGEDEF << "\\advance\\pdfhorigin by \\extraW" << endl;
+    PAGEDEF << "\\advance\\pdfvorigin by \\extraN" << endl;
+    PAGEDEF << "\\advance\\pdfpagewidth by \\extraW" << endl;
+    PAGEDEF << "\\advance\\pdfpagewidth by \\extraE" << endl;
+    PAGEDEF << "\\advance\\pdfpageheight by \\extraN" << endl;
+    PAGEDEF << "\\advance\\pdfpageheight by \\extraS" << endl;
 
-    PAGEDEF << "\\newdimen\\overlap\\overlap=" << LAYOUT.overlap << "bp" << std::endl;
+    PAGEDEF << "\\newdimen\\overlap\\overlap=" << LAYOUT.overlap << "bp" << endl;
 
-    PAGEDEF << "\\dimtobp{\\the\\pdfpagewidth}\\edef\\xsize{\\tmpdef}%" << std::endl;
-    PAGEDEF << "\\dimtobp{\\the\\pdfpageheight}\\edef\\ysize{\\tmpdef}%" << std::endl;
-    PAGEDEF << "\\advance\\y by -\\extraN\\advance\\y by \\overlap" << std::endl;
-    PAGEDEF << "\\dimtobp{\\the\\y}\\edef\\nsize{\\tmpdef}%" << std::endl;
-    PAGEDEF << "\\x=\\extraW\\advance\\x by \\overlap" << std::endl;
-    PAGEDEF << "\\dimtobp{\\the\\x}\\edef\\wsize{\\tmpdef}%" << std::endl;
+    PAGEDEF << "\\dimtobp{\\the\\pdfpagewidth}\\edef\\xsize{\\tmpdef}%" << endl;
+    PAGEDEF << "\\dimtobp{\\the\\pdfpageheight}\\edef\\ysize{\\tmpdef}%" << endl;
+    PAGEDEF << "\\advance\\y by -\\extraN\\advance\\y by \\overlap" << endl;
+    PAGEDEF << "\\dimtobp{\\the\\y}\\edef\\nsize{\\tmpdef}%" << endl;
+    PAGEDEF << "\\x=\\extraW\\advance\\x by \\overlap" << endl;
+    PAGEDEF << "\\dimtobp{\\the\\x}\\edef\\wsize{\\tmpdef}%" << endl;
 
-    PAGEDEF << "\\newdimen\\overlaphalf\\overlaphalf=\\overlap\\divide\\overlaphalf by 2%" << std::endl;
-    PAGEDEF << "\\newdimen\\framew\\framew=\\pdfpagewidth\\advance\\framew by -\\overlap" << std::endl;
-    PAGEDEF << "\\newdimen\\frameh\\frameh=\\pdfpageheight\\advance\\frameh by -\\overlap" << std::endl;
-    PAGEDEF << "\\newdimen\\framex\\framex=\\extraW\\advance\\framex by \\overlaphalf" << std::endl;
-    PAGEDEF << "\\newdimen\\framey\\framey=\\extraN\\advance\\framey by \\overlaphalf" << std::endl;
+    PAGEDEF << "\\newdimen\\overlaphalf\\overlaphalf=\\overlap\\divide\\overlaphalf by 2%" << endl;
+    PAGEDEF << "\\newdimen\\framew\\framew=\\pdfpagewidth\\advance\\framew by -\\overlap" << endl;
+    PAGEDEF << "\\newdimen\\frameh\\frameh=\\pdfpageheight\\advance\\frameh by -\\overlap" << endl;
+    PAGEDEF << "\\newdimen\\framex\\framex=\\extraW\\advance\\framex by \\overlaphalf" << endl;
+    PAGEDEF << "\\newdimen\\framey\\framey=\\extraN\\advance\\framey by \\overlaphalf" << endl;
 
-    PAGEDEF << "\\dimtobp{\\framew}\\edef\\Framew{\\tmpdef}%" << std::endl;
-    PAGEDEF << "\\dimtobp{\\frameh}\\edef\\Frameh{\\tmpdef}%" << std::endl;
-    PAGEDEF << "\\dimtobp{\\framex}\\edef\\Framex{\\tmpdef}%" << std::endl;
-    PAGEDEF << "\\dimtobp{\\framey}\\edef\\Framey{\\tmpdef}%" << std::endl;
+    PAGEDEF << "\\dimtobp{\\framew}\\edef\\Framew{\\tmpdef}%" << endl;
+    PAGEDEF << "\\dimtobp{\\frameh}\\edef\\Frameh{\\tmpdef}%" << endl;
+    PAGEDEF << "\\dimtobp{\\framex}\\edef\\Framex{\\tmpdef}%" << endl;
+    PAGEDEF << "\\dimtobp{\\framey}\\edef\\Framey{\\tmpdef}%" << endl;
 
 
     PAGEDEF << "\\adjustedHS=" << HS << "bp" <<
       "\\advance\\adjustedHS by \\extraE" << 
       "\\advance\\adjustedHS by \\extraW" <<
       "\\advance\\adjustedHS by \\overlap" << 
-      "\\advance\\adjustedHS by \\overlap" <<  std::endl;
+      "\\advance\\adjustedHS by \\overlap" <<  endl;
 
     PAGEDEF << "\\adjustedVS=" << VS << "bp" << 
       "\\advance\\adjustedVS by \\extraN" << 
       "\\advance\\adjustedVS by \\extraS" << 
       "\\advance\\adjustedVS by \\overlap" << 
-      "\\advance\\adjustedVS by \\overlap" << std::endl;
+      "\\advance\\adjustedVS by \\overlap" << endl;
 
     //calibration
     PAGEDEF.precision(10);
     for (int i=0; i<9; i++) {
-      PAGEDEF << "\\calibrX{" << LAYOUT.calibration_local[i].x - MINX << "bp}\\tmpdimenX=\\tmpdimen" << std::endl;
-      PAGEDEF << "\\calibrY{" << LAYOUT.calibration_local[i].y - MINY << "bp}\\tmpdimenY=\\tmpdimen" << std::endl;
+      PAGEDEF << "\\calibrX{" << LAYOUT.calibration_local[i].x - MINX << "bp}\\tmpdimenX=\\tmpdimen" << endl;
+      PAGEDEF << "\\calibrY{" << LAYOUT.calibration_local[i].y - MINY << "bp}\\tmpdimenY=\\tmpdimen" << endl;
     
       PAGEDEF << "\\pdfcatalog { /thCalibrate" << i << 
                  " (X=\\the\\tmpdimenX, Y=\\the\\tmpdimenY, L=" << LAYOUT.calibration_latlong[i].x << 
-                 ", F=" << LAYOUT.calibration_latlong[i].y << ")}" << std::endl;
+                 ", F=" << LAYOUT.calibration_latlong[i].y << ")}" << endl;
     }
     PAGEDEF << "\\pdfcatalog { /thCalibrate (HS=\\the\\adjustedHS, VS=\\the\\adjustedVS, HD=" << LAYOUT.calibration_hdist << ")}";
     PAGEDEF.precision(2);
 
-    PAGEDEF << "\\tmpdimen=\\extraW\\advance\\tmpdimen by \\overlap" << std::endl;
-    PAGEDEF << "\\dimtobp{\\tmpdimen}\\edef\\adjustedX{\\tmpdef}%" << std::endl;
-    PAGEDEF << "\\tmpdimen=\\extraS\\advance\\tmpdimen by \\overlap" << std::endl;
-    PAGEDEF << "\\dimtobp{\\tmpdimen}\\edef\\adjustedY{\\tmpdef}%" << std::endl;
+    PAGEDEF << "\\tmpdimen=\\extraW\\advance\\tmpdimen by \\overlap" << endl;
+    PAGEDEF << "\\dimtobp{\\tmpdimen}\\edef\\adjustedX{\\tmpdef}%" << endl;
+    PAGEDEF << "\\tmpdimen=\\extraS\\advance\\tmpdimen by \\overlap" << endl;
+    PAGEDEF << "\\dimtobp{\\tmpdimen}\\edef\\adjustedY{\\tmpdef}%" << endl;
 
     if (! LAYOUT.transparent_map_bg) {
         PAGEDEF << "\\PL{q " << LAYOUT.col_background.to_pdfliteral(fillstroke::fill) << " -" <<
@@ -1578,29 +1579,29 @@ void build_pages() {
 			    "\\nsize\\space" << 
 			    "\\xsize\\space" << 
 			    "\\ysize\\space" << 
-                            " re f Q}%" << std::endl;
+                            " re f Q}%" << endl;
     }
     PAGEDEF << "\\ifdim\\framethickness>0mm\\dimtobp{\\framethickness}\\edef\\Framethickness{\\tmpdef}" <<
                "\\PL{q " << black2pdf(1, fillstroke::stroke) << " 1 J 1 j \\Framethickness\\space w " << 
                "-\\Framex\\space\\Framey\\space\\Framew\\space-\\Frameh\\space" << 
-               " re s Q}\\fi" << std::endl;
+               " re s Q}\\fi" << endl;
 
 
-//    PAGEDEF << "\\leavevmode\\setbox\\xxx=\\hbox to " << HS << "bp{%" << std::endl;
-    PAGEDEF << "\\leavevmode\\setbox\\xxx=\\hbox to 0bp{%" << std::endl;
+//    PAGEDEF << "\\leavevmode\\setbox\\xxx=\\hbox to " << HS << "bp{%" << endl;
+    PAGEDEF << "\\leavevmode\\setbox\\xxx=\\hbox to 0bp{%" << endl;
 
     if (LAYOUT.surface == 1) print_surface_bitmaps(PAGEDEF,MINX,MINY);
 
 //    print_page_bg(PAGEDEF);
-    for (std::map<int,layerrecord>::iterator I = LAYERHASH.begin();
+    for (map<int,layerrecord>::iterator I = LAYERHASH.begin();
                                         I != LAYERHASH.end(); I++) {
       if (I->second.Z == 0) {
         if (LAYOUT.OCG && LAYOUT.transparency) {
-          PAGEDEF << "\\PL{/OC /oc\\the\\oc" << u2str(I->first) << "\\space BDC}%" << std::endl;
+          PAGEDEF << "\\PL{/OC /oc\\the\\oc" << u2str(I->first) << "\\space BDC}%" << endl;
         }
         print_page_bg_scraps(I->first,PAGEDEF);
         if (LAYOUT.OCG && LAYOUT.transparency) {
-          PAGEDEF << "\\PL{EMC}%" << std::endl;
+          PAGEDEF << "\\PL{EMC}%" << endl;
         }
       }
     }
@@ -1608,22 +1609,22 @@ void build_pages() {
     if (LAYOUT.grid == 1) print_grid_pdf(PAGEDEF,MINX,MINY,origMINX,origMINY,origMAXX,origMAXY);
 
     if (!MAP_PREVIEW_DOWN.empty()) print_preview(0,PAGEDEF,MINX,MINY);
-    for (std::map<int,layerrecord>::iterator I = LAYERHASH.begin();
+    for (map<int,layerrecord>::iterator I = LAYERHASH.begin();
                                         I != LAYERHASH.end(); I++) {
       if (I->second.Z == 0) {
-        PAGEDEF << "\\setbox\\xxx=\\hbox to " << HS << "bp{%" << std::endl;
+        PAGEDEF << "\\setbox\\xxx=\\hbox to " << HS << "bp{%" << endl;
                             // we need flush layer data using XObject 
                             // (the text clipping path may become too large)
 
         print_map((*I).first,PAGEDEF);
 
-        PAGEDEF << "\\hfill}\\ht\\xxx=" << VS << "bp\\dp\\xxx=0bp" << std::endl;
+        PAGEDEF << "\\hfill}\\ht\\xxx=" << VS << "bp\\dp\\xxx=0bp" << endl;
         PAGEDEF << "\\immediate\\pdfxform ";
         if (LAYOUT.OCG) {
           PAGEDEF << "attr{/OC \\the\\oc" << u2str(I->first) << "\\space 0 R} ";
         }
         if (icc_used())  PAGEDEF << "resources{/ColorSpace <<" << icc2pdfresources() << ">>} ";
-        PAGEDEF << "\\xxx\\PB{0}{0}{\\pdflastxform}%" << std::endl;
+        PAGEDEF << "\\xxx\\PB{0}{0}{\\pdflastxform}%" << endl;
       }
     }
     if (!MAP_PREVIEW_UP.empty()) print_preview(1,PAGEDEF,MINX,MINY);
@@ -1632,48 +1633,48 @@ void build_pages() {
     if (LAYOUT.grid == 2) print_grid_pdf(PAGEDEF,MINX,MINY,origMINX,origMINY,origMAXX,origMAXY);
 
     if (LAYOUT.map_grid) {
-      PAGEDEF << "\\PL{q .4 w " << black2pdf(0.4, fillstroke::fillstroke) << " }%" << std::endl;
-      PAGEDEF << "\\PL{0 0 " << HS << " " << VS << " re S}%" << std::endl;
+      PAGEDEF << "\\PL{q .4 w " << black2pdf(0.4, fillstroke::fillstroke) << " }%" << endl;
+      PAGEDEF << "\\PL{0 0 " << HS << " " << VS << " re S}%" << endl;
       for (double i=0; i <= HS; i += LAYOUT.hsize) {
-        PAGEDEF << "\\PL{" << i << " 0 m " << i << " " << VS << " l S}%" << std::endl;
+        PAGEDEF << "\\PL{" << i << " 0 m " << i << " " << VS << " l S}%" << endl;
 	if (i<HS) {
           PAGEDEF << "\\PL{q 1 0 0 1 " << i+LAYOUT.hsize/2 << 
 	    " 0 cm}\\gridcoord{8}{\\size[24]" << grid_name(LAYOUT.labelx,round((MINX+i)/LAYOUT.hsize)) << 
-	    "}\\PL{Q}%" << std::endl;
+	    "}\\PL{Q}%" << endl;
           PAGEDEF << "\\PL{q 1 0 0 1 " << i+LAYOUT.hsize/2 << " " << VS <<
 	    " cm}\\gridcoord{2}{\\size[24]" << grid_name(LAYOUT.labelx,round((MINX+i)/LAYOUT.hsize)) << 
-	    "}\\PL{Q}%" << std::endl;
+	    "}\\PL{Q}%" << endl;
 	}
       }
       for (double i=0; i <= VS; i += LAYOUT.vsize) {
-        PAGEDEF << "\\PL{0 " << i << " m " << HS << " " << i << " l S}%" << std::endl;
+        PAGEDEF << "\\PL{0 " << i << " m " << HS << " " << i << " l S}%" << endl;
 	if (i<VS) {
           PAGEDEF << "\\PL{q 1 0 0 1 0 " << i+LAYOUT.vsize/2 << 
     	    " cm}\\gridcoord{6}{\\size[24]" << grid_name(LAYOUT.labely,round((MINY+VS-i)/LAYOUT.vsize)-1) << 
-	    "}\\PL{Q}%" << std::endl;
+	    "}\\PL{Q}%" << endl;
           PAGEDEF << "\\PL{q 1 0 0 1 " << HS << " " << i+LAYOUT.vsize/2 << 
 	    " cm}\\gridcoord{4}{\\size[24]" << grid_name(LAYOUT.labely,round((MINY+VS-i)/LAYOUT.vsize)-1) << 
-	    "}\\PL{Q}%" << std::endl;
+	    "}\\PL{Q}%" << endl;
 	}
       }
-      PAGEDEF << "\\PL{Q}%" << std::endl;
+      PAGEDEF << "\\PL{Q}%" << endl;
     }
 ////    PAGEDEF << "\\setbox\\xxx=\\hbox to " << HS << "bp{";      // map legend
-////    PAGEDEF << "\\maplayout\\hfill}\\ht\\xxx=" << VS << "bp\\dp\\xxx=0bp" << std::endl;
-////    PAGEDEF << "\\immediate\\pdfxform\\xxx\\PB{0}{0}{\\pdflastxform}%" << std::endl;
+////    PAGEDEF << "\\maplayout\\hfill}\\ht\\xxx=" << VS << "bp\\dp\\xxx=0bp" << endl;
+////    PAGEDEF << "\\immediate\\pdfxform\\xxx\\PB{0}{0}{\\pdflastxform}%" << endl;
 
-    PAGEDEF << "\\hfill}\\ht\\xxx=" << VS << "bp\\dp\\xxx=0bp" << std::endl;
-//    PAGEDEF << "\\immediate\\pdfxform\\xxx\\PB{0}{0}{\\pdflastxform}%" << std::endl;
-    PAGEDEF << "\\box\\xxx%" << std::endl;
+    PAGEDEF << "\\hfill}\\ht\\xxx=" << VS << "bp\\dp\\xxx=0bp" << endl;
+//    PAGEDEF << "\\immediate\\pdfxform\\xxx\\PB{0}{0}{\\pdflastxform}%" << endl;
+    PAGEDEF << "\\box\\xxx%" << endl;
     
     PAGEDEF << "\\smash{\\rlap{\\kern-\\extraW\\raise-\\extraS" << 
-               "\\hbox{\\pdfrefxform\\THmaplegend}}}" << std::endl;
+               "\\hbox{\\pdfrefxform\\THmaplegend}}}" << endl;
 
     if ((LAYOUT.OCG && LAYOUT.transparency) || icc_used()) {
       PAGEDEF << "\\edef\\thpdfpageres {";
       if (LAYOUT.OCG && LAYOUT.transparency) {
         PAGEDEF << " /Properties << ";
-        for (std::map<int,layerrecord>::iterator I = LAYERHASH.begin();
+        for (map<int,layerrecord>::iterator I = LAYERHASH.begin();
                                             I != LAYERHASH.end(); I++) {
           if (I->second.Z == 0)
             PAGEDEF << "/oc\\the\\oc" << u2str(I->first) << "\\space\\the\\oc" <<
@@ -1684,7 +1685,7 @@ void build_pages() {
       if (icc_used()) {
         PAGEDEF << " /ColorSpace <<" << icc2pdfresources() << ">> ";
       }
-      PAGEDEF << "}" << std::endl << "\\pdfpageresources\\expandafter{\\thpdfpageres}" << std::endl;
+      PAGEDEF << "}" << endl << "\\pdfpageresources\\expandafter{\\thpdfpageres}" << endl;
     }
   }
 

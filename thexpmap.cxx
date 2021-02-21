@@ -77,8 +77,6 @@
 #include "extern/img.h"
 #include "thcs.h"
 
-#include <fmt/printf.h>
-
 thexpmap::thexpmap() {
   this->format = TT_EXPMAP_FMT_UNKNOWN;
   this->items = TT_EXPMAP_ITEM_ALL;
@@ -153,11 +151,11 @@ void thexpmap::parse_options(int & argx, int nargs, char ** args)
     case TT_EXPMAP_OPT_FORMAT:  
       argx++;
       if (argx >= nargs)
-        ththrow("missing format -- \"{}\"",args[optx]);
+        ththrow(("missing format -- \"%s\"",args[optx]))
       this->format = thmatch_token(args[argx], thtt_expmap_fmt);
       fmt = args[argx];
       if (this->format == TT_EXPMAP_FMT_UNKNOWN)
-        ththrow("unknown format -- \"{}\"", args[argx]);
+        ththrow(("unknown format -- \"%s\"", args[argx]))
       argx++;
       supform = false;
       switch (this->export_mode) {
@@ -183,28 +181,28 @@ void thexpmap::parse_options(int & argx, int nargs, char ** args)
           break;
       }
       if (!supform)
-        ththrow("format not supported -- {}",fmt);
+        ththrow(("format not supported -- %s",fmt))
       break;
     case TT_EXPMAP_OPT_ENCODING:  
       argx++;
       if (argx >= nargs)
-        ththrow("missing encoding -- \"{}\"",args[optx]);
+        ththrow(("missing encoding -- \"%s\"",args[optx]))
       this->encoding = thmatch_token(args[argx], thtt_encoding);
       if (this->encoding == TT_UNKNOWN_ENCODING)
-        ththrow("unknown encoding -- \"{}\"", args[argx]);
+        ththrow(("unknown encoding -- \"%s\"", args[argx]))
       argx++;
       break;
     case TT_EXPMAP_OPT_PROJECTION:
       argx++;
       if (argx >= nargs)
-        ththrow("missing projection specification -- \"{}\"",args[optx]);
+        ththrow(("missing projection specification -- \"%s\"",args[optx]))
       this->projstr = thdb.strstore(args[argx],true);
       argx++;
       break;
     case TT_EXPMAP_OPT_LAYOUT:
       argx++;
       if (argx >= nargs)
-        ththrow("missing layout -- \"{}\"",args[optx]);
+        ththrow(("missing layout -- \"%s\"",args[optx]))
       this->layout->set(thcmd_option_desc(TT_LAYOUT_COPY), &(args[argx]), this->cfgptr->cfg_file.get_cif_encoding(), 0); // = thdb.strstore(args[argx],true);
       this->layoutopts += " -layout ";
       thencode(&(this->cfgptr->bf1), args[argx], this->cfgptr->cfg_file.get_cif_encoding());
@@ -217,10 +215,10 @@ void thexpmap::parse_options(int & argx, int nargs, char ** args)
     case TT_EXPMAP_OPT_DISABLE:
       argx++;
       if (argx >= nargs)
-        ththrow("missing map entity -- \"{}\"",args[optx]);
+        ththrow(("missing map entity -- \"%s\"",args[optx]))
       utmp = thmatch_token(args[argx], thtt_expmap_items);
       if (utmp == TT_EXPMAP_ITEM_UNKNOWN)
-        ththrow("unknown map entity -- \"{}\"", args[argx]);
+        ththrow(("unknown map entity -- \"%s\"", args[argx]))
       if (optid == TT_EXPMAP_OPT_ENABLE) {
         this->items |= utmp;
       } else {
@@ -250,10 +248,10 @@ void thexpmap::parse_layout_option(int & argx, int nargs, char ** args) {
   thcmd_option_desc o = this->layout->get_cmd_option_desc(opts);
   
   if (o.id == TT_DATAOBJECT_UNKNOWN)
-    ththrow("unknown layout option -- -{}", opts);
+    ththrow(("unknown layout option -- -%s", opts));
     
   if (argx + o.nargs >= nargs)
-    ththrow("not enough layout option arguments -- -{}", opts);
+    ththrow(("not enough layout option arguments -- -%s", opts));
   
   argx++;  
   
@@ -901,7 +899,7 @@ void thexpmap::export_th2(class thdb2dprj * prj)
 #endif
               retcode = system(com.get_buffer());
               if (retcode != EXIT_SUCCESS)
-                ththrow("cp exit code -- {}", retcode);
+                ththrow(("cp exit code -- %d", retcode))
               for(cpch = strlen(fnm); cpch > 0; cpch--) {
                 if ((fnm[cpch] == '/') || (fnm[cpch] == '\\')) {
                   cpch++;
@@ -1125,7 +1123,7 @@ void thexpmap::export_pdf(thdb2dxm * maps, thdb2dprj * prj) {
   
   thbuffer aboveprev, belowprev;
 
-  std::list<scraprecord>::iterator SCRAPITEM;
+  list<scraprecord>::iterator SCRAPITEM;
   scraprecord dummsr;
   
   const char * fnm;
@@ -1143,7 +1141,7 @@ void thexpmap::export_pdf(thdb2dxm * maps, thdb2dprj * prj) {
   this->register_output(fnm);
 
   layerrecord L;
-  std::map<int, layerrecord>::iterator LAYER_ITER;
+  map<int, layerrecord>::iterator LAYER_ITER;
 
   thdb2dxm * cmap = maps;
   thdb2dxs * cbm;
@@ -1398,7 +1396,7 @@ else
     
   if (COLORLEGENDLIST.size() > 0) {
     fprintf(plf,"# COLOR LEGEND\n");
-    for (std::list<colorlegendrecord>::iterator cli = COLORLEGENDLIST.begin();
+    for (list<colorlegendrecord>::iterator cli = COLORLEGENDLIST.begin();
       cli != COLORLEGENDLIST.end(); cli++) {
       fprintf(plf,"# %4.0f %4.0f %4.0f %4.0f %s\n", 100.0 * cli->col_legend.a, 100.0 * cli->col_legend.b, 100.0 * cli->col_legend.c, 100.0 * cli->col_legend.d, cli->texname.c_str());
     }
@@ -1966,7 +1964,7 @@ else
     
       fprintf(plf,"\t# expanded map: %s\n",cmap->map->name);
       fprintf(plf,"\t%ld => {\n",cmap->output_number);
-      LAYERHASH.insert(std::make_pair(cmap->output_number,L));
+      LAYERHASH.insert(make_pair(cmap->output_number,L));
       LAYER_ITER = LAYERHASH.find(cmap->output_number);
       LAYER_ITER->second.Z = 0;
       
@@ -2030,7 +2028,7 @@ else
       	  fprintf(plf,"\t\tA => %ld,\n",cbm->m_target->fmap->output_number);
           fprintf(plf,"\t},\n");
 
-          LAYERHASH.insert(std::make_pair(cbm->m_target->preview_output_number,L));
+          LAYERHASH.insert(make_pair(cbm->m_target->preview_output_number,L));
           LAYER_ITER = LAYERHASH.find(cbm->m_target->preview_output_number);
           LAYER_ITER->second.Z = 1;
           LAYER_ITER->second.AltJump = cbm->m_target->fmap->output_number;
@@ -2227,7 +2225,7 @@ else
     "#################### end of metapost log file ####################\n",true);
     if (retcode != EXIT_SUCCESS) {
       thassert(chdir(wdir.get_buffer()) == 0);
-      ththrow("metapost exit code -- {}", retcode);
+      ththrow(("metapost exit code -- %d", retcode))
     }
   }
 
@@ -2271,7 +2269,7 @@ else
       "##################### end of pdftex log file #####################\n",false);
       if (retcode != EXIT_SUCCESS) {
         thassert(chdir(wdir.get_buffer()) == 0);
-        ththrow("pdftex exit code -- {}", retcode);
+        ththrow(("pdftex exit code -- %d", retcode))
       }
 
       // Let's copy results and log-file to working directory
@@ -2300,7 +2298,7 @@ else
 #endif
       retcode = system(com.get_buffer());
       if (retcode != EXIT_SUCCESS)
-        ththrow("cp exit code -- {}", retcode);
+        ththrow(("cp exit code -- %d", retcode))
       break;
       // END OF PDF POSTPROCESSING
 
@@ -2360,7 +2358,7 @@ thexpmap_xmps thexpmap::export_mp(thexpmapmpxs * out, class thscrap * scrap,
   bool somex, first, vis;
   thscraplp * slp;
   thdb2dlp * lp;
-  std::vector<std::string> dbg_stnms;
+  thexception dbg_stnms;
   bool map_shift = (std::hypot(out->m_shift_x, out->m_shift_y) > 1e-2);
 	
 	// check scrap limits
@@ -2384,15 +2382,15 @@ thexpmap_xmps thexpmap::export_mp(thexpmapmpxs * out, class thscrap * scrap,
 			  fprintf(out->file, "warningcheck := 0;\n");
 				if (max > 32767.0) {
 				  minscale = (1.0 / out->layout->scale) * (max / 32767.0);
-					ththrow("scale too large -- maximal scale for this configuration is 1 : {:.0f}", minscale + 1);
+					ththrow(("scale too large -- maximal scale for this configuration is 1 : %.0f", minscale + 1));
 				}
 			} else {
-				ththrow("scrap {}@{} defined at {} [{}] is too large to process in metapost in this scale -- maximal scale for this scrap is 1 : {:.0f}", 
+				ththrow(("scrap %s@%s defined at %s [%d] is too large to process in metapost in this scale -- maximal scale for this scrap is 1 : %.0f", 
 					scrap->name, 
 					scrap->fsptr->full_name, 
 					scrap->source.name, 
 					scrap->source.line,
-					minscale + 1);
+					minscale + 1));
 			}
 		}
 	}
@@ -2802,10 +2800,10 @@ thexpmap_xmps thexpmap::export_mp(thexpmapmpxs * out, class thscrap * scrap,
         this->db->db1d.m_station_attr.export_mp_object_end(out->file, slp->station_name.id);
         if (out->layout->is_debug_stationnames() && (slp->station_name.id != 0)) {
           tmps = &(thdb.db1d.station_vec[slp->station_name.id - 1]);
-          out->symset->export_mp_symbol_options(dbg_stnms, SYMP_STATIONNAME);
-          dbg_stnms.push_back(fmt::sprintf("p_label.urt(btex \\thstationname %s etex, (%.2f, %.2f), 0.0, p_label_mode_debugstation);",
+          out->symset->export_mp_symbol_options(&dbg_stnms, SYMP_STATIONNAME);
+          dbg_stnms.appspf("p_label.urt(btex \\thstationname %s etex, (%.2f, %.2f), 0.0, p_label_mode_debugstation);\n",
             (const char *) utf2tex(thobjectname_print_full_name(tmps->name, tmps->survey, layout->survey_level)), 
-            thxmmxst(out, slp->stx, slp->sty)));
+            thxmmxst(out, slp->stx, slp->sty));
         }
       }
       //// export continuation station
@@ -2881,10 +2879,10 @@ thexpmap_xmps thexpmap::export_mp(thexpmapmpxs * out, class thscrap * scrap,
                   this->db->db1d.m_station_attr.export_mp_object_end(out->file, ptp->station_name.id);
                 }
                 if (out->layout->is_debug_stationnames() && (tmps != NULL)) {
-                      out->symset->export_mp_symbol_options(dbg_stnms, SYMP_STATIONNAME);
-                      dbg_stnms.push_back(fmt::sprintf("p_label.urt(btex \\thstationname %s etex, (%.2f, %.2f), 0.0, p_label_mode_debugstation);",
+                      out->symset->export_mp_symbol_options(&dbg_stnms, SYMP_STATIONNAME);
+                      dbg_stnms.appspf("p_label.urt(btex \\thstationname %s etex, (%.2f, %.2f), 0.0, p_label_mode_debugstation);\n",
                       (const char *) utf2tex(thobjectname_print_full_name(tmps->name, tmps->survey, layout->survey_level)), 
-                      thxmmxst(out, ptp->point->xt, ptp->point->yt)));
+                      thxmmxst(out, ptp->point->xt, ptp->point->yt));
                 }
               }
             }
@@ -2995,10 +2993,9 @@ thexpmap_xmps thexpmap::export_mp(thexpmapmpxs * out, class thscrap * scrap,
     obj = obj->pscrapoptr;
   }
 
-  if (out->layout->is_debug_stationnames() && (!dbg_stnms.empty())) {
+  if (out->layout->is_debug_stationnames() && (strlen(dbg_stnms.get_buffer()) > 0)) {
     thexpmap_export_mp_bgif;
-    for (const auto& str : dbg_stnms)
-      fmt::print(out->file, "{}\n", str);
+    fprintf(out->file, "%s", dbg_stnms.get_buffer());
   }
   
   // nakoniec scrap name, ak mame zapnuty dany debug mod

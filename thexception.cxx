@@ -1,5 +1,9 @@
-/*
- * Copyright (C) 2003 Martin Budaj
+/**
+ * @file thexception.cxx
+ * String exception class.
+ */
+  
+/* Copyright (C) 2000 Stacho Mudrak
  * 
  * $Date: $
  * $RCSfile: $
@@ -22,27 +26,43 @@
  * --------------------------------------------------------------------
  */
  
-
-#ifndef thpdfdbg_h
-#define thpdfdbg_h
-
-#include <iostream>
-#include <string>
-
 #include "thexception.h"
+#include <cstdio>
+#include <stdarg.h>
 
-using namespace std;
+void thexception::appspf(const char * format, ...)
+{
+  char * desc = new char [8192];
+  va_list args;
+  va_start(args, format);
+  std::vsnprintf(desc, 8192, format, args);
+  this->strcat(desc);
+  va_end(args);
+  delete [] desc;
+}
 
-string u2str(unsigned u);
-string tex_Xname(string s);
-string tex_Wname(string s);
-string tex_set_ref(string s, string t);
-string tex_get_ref(string s);
-string pdf_info(void);
-string rgb2svg(double r, double g, double b);
-string icc2pdfresources();
-bool icc_used();
 
-extern bool tex_refs_registers;
+void thexception::insspf(const char * format, ...)
+{
+  char * desc = new char [8192];
+  char * orig = new char [this->size];
+  ::strcpy(orig, this->buff);
+  va_list args;
+  va_start(args, format);
+  std::vsnprintf(desc, 8192, format, args);
+  this->strcpy(desc);
+  this->strcat(orig);
+  va_end(args);
+  delete [] orig;
+  delete [] desc;
+}
 
-#endif
+
+char * thexception::get_desc() {
+  return this->get_buffer();
+}
+
+
+thexception thexc;
+
+

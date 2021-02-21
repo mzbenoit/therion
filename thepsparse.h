@@ -27,6 +27,8 @@
 #include <set>
 #include <vector>
 
+using namespace std;
+
 enum class fillstroke {none, fill, stroke, fillstroke, fill2, clip, mask};
 enum class colormodel {no, grey, rgb, cmyk};
 
@@ -45,23 +47,23 @@ struct color{
   void set(double,double,double,double);
   bool is_white();
   bool is_defined();
-  std::string to_svg();
-  std::string to_pdfliteral(fillstroke = fillstroke::fillstroke);
+  string to_svg();
+  string to_pdfliteral(fillstroke = fillstroke::fillstroke);
 };
 
 struct CGS {  // current graphics state
   color col;
   int linejoin, linecap;
   float miterlimit, linewidth;
-  std::list<float> dasharray;
+  list<float> dasharray;
   float dashoffset;
-  std::string pattern;
+  string pattern;
   
-  std::map<int,int> clippathdepth;
+  map<int,int> clippathdepth;
   static int clippathID;
    
   CGS();
-  std::string svg_color();  
+  string svg_color();  
 };
 
 struct MP_transform {
@@ -70,8 +72,8 @@ struct MP_transform {
   
   MP_transform();
   void clear();
-  void set(int, std::string, std::string, double, double);
-  void set(int, std::string, std::string, std::string, std::string, std::string, std::string, double, double);
+  void set(int, string, string, double, double);
+  void set(int, string, string, string, string, string, string, double, double);
 };
 
 struct MP_path_segment {
@@ -80,7 +82,7 @@ struct MP_path_segment {
 };
 
 struct MP_path {
-  std::vector<MP_path_segment> segments;
+  vector<MP_path_segment> segments;
   bool closed;
 //  bool clip;  mp nevie orezat aj vykreslit
   int fillstroke;
@@ -89,10 +91,10 @@ struct MP_path {
   
   MP_path();
   void clear();
-  void add(int, std::string, std::string, std::string, std::string, std::string, std::string, double, double);
-  void add(int, std::string, std::string, double, double);
+  void add(int, string, string, string, string, string, string, double, double);
+  void add(int, string, string, double, double);
 
-  void print_svg(std::ofstream & F, CGS & gstate, std::string prefix);
+  void print_svg(ofstream & F, CGS & gstate, string prefix);
 };
 
 struct MP_index {
@@ -100,25 +102,25 @@ struct MP_index {
 };
 
 struct MP_text {
-  std::string text, font;
+  string text, font;
   double size, x, y, xx, xy, yx, yy;
   color col;
   bool transformed;
   
   MP_text();
   void clear();
-  void print_svg(std::ofstream & F, CGS & gstate);
+  void print_svg(ofstream & F, CGS & gstate);
 };
 
 struct MP_setting {
   int command;
   double data[4];
 //  string str;
-  std::list<float> dasharray;
+  list<float> dasharray;
   float dashoffset;
-  std::string pattern;
+  string pattern;
   
-  void print_svg(std::ofstream & F, CGS & gstate);
+  void print_svg(ofstream & F, CGS & gstate);
 };
 
 enum {MP_lineto, MP_moveto, MP_curveto, MP_rlineto};
@@ -135,42 +137,42 @@ enum {MP_mitered = 0, MP_rounded, MP_beveled};
 enum {MP_butt=0, MP_squared=2};
 
 struct MP_data {
-  std::vector<MP_index> index;
-  std::vector<MP_path> paths;
-  std::vector<MP_text> texts;
-  std::vector<MP_setting> settings;
-  std::vector<MP_transform> transforms;
+  vector<MP_index> index;
+  vector<MP_path> paths;
+  vector<MP_text> texts;
+  vector<MP_setting> settings;
+  vector<MP_transform> transforms;
   
   int idx;
   
   CGS gstate;
   
-  std::list<CGS> GSTATE_stack;
+  list<CGS> GSTATE_stack;
   
   void add(MP_path);
   void add(MP_text);
   void add(MP_transform);
   void add(int);
-  void add(int,std::string);
+  void add(int,string);
   void get();
   void pop();
   
   MP_data();
   void clear();
   
-  void print_svg(std::ofstream & F, std::string prefix);
+  void print_svg(ofstream & F, string prefix);
 };
 
 struct converted_data {
   MP_data MP;
-  std::set<std::string> fonts, patterns;
+  set<string> fonts, patterns;
   bool transparency = false;
 //  double hsize, vsize;
   double llx, lly, urx, ury;
   
   void clear();
   converted_data();
-  void print_svg(std::ofstream & F, std::string prefix="");
+  void print_svg(ofstream & F, string prefix="");
 };
 
 struct pattern {
@@ -178,12 +180,12 @@ struct pattern {
   float llx, lly, urx, ury, xstep, ystep;
   double llx1,lly1,urx1,ury1;
   double xx, xy, yx, yy, x, y;
-  std::string name;
+  string name;
   bool used;
 };
 
 int thconvert_new();
-void parse_eps(std::string fname, std::string cname, double dx, double dy, 
+void parse_eps(string fname, string cname, double dx, double dy, 
                double & c1, double & c2, double & c3, double & c4, 
                converted_data & data, color=color());
 

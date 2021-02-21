@@ -31,13 +31,15 @@
 #include <set>
 #include "thepsparse.h"
 
+using namespace std;
+
 struct surfpictrecord {
   const char * filename, * type;
   double dx, dy, xx, xy, yx, yy, width, height;
 };
 
 struct scraprecord {
-  std::string name,F,B,I,E,X,G,C,P;      // name + files
+  string name,F,B,I,E,X,G,C,P;      // name + files
   converted_data Fc, Bc, Ic, Ec, Xc, Gc;
   double S1,S2;                      // shift
   int layer,level,sect;             // Y, V, Z
@@ -49,32 +51,32 @@ struct scraprecord {
         X1,X2,X3,X4;
 
   color col_scrap;
-  std::list<surfpictrecord> SKETCHLIST;
+  list<surfpictrecord> SKETCHLIST;
   scraprecord();
 };
 
 struct layerrecord {
-  std::set<int> U,D;
-  std::string N,T;
+  set<int> U,D;
+  string N,T;
   int Z;
   int AltJump;
   int minx, maxx, miny, maxy;
   bool bookmark;
-  std::map< int,std::set<std::string> > scraps;
-  std::set<std::string> allscraps;
+  map< int,set<string> > scraps;
+  set<string> allscraps;
   
   layerrecord();
 };
 
 struct legendrecord {
-  std::string name, fname, descr;
+  string name, fname, descr;
   converted_data ldata;
   unsigned idsym, idfig, idnum;
 };
 
 struct colorlegendrecord {
   color col_legend;
-  std::string texname, name;
+  string texname, name;
 };
 
 struct paired {
@@ -86,7 +88,7 @@ struct paired {
 paired rotatedaround(paired x,paired o, double th);
 
 struct layout {
-  std::string excl_list,labelx,labely,
+  string excl_list,labelx,labely,
          doc_author,doc_keywords,doc_subject,doc_title,doc_comment,
          northarrow, scalebar,langstr,
          icc_profile_cmyk, icc_profile_rgb, icc_profile_gray;
@@ -102,7 +104,7 @@ struct layout {
   colormodel output_colormodel;
   
   int surface, grid, proj, grid_coord_freq; // freq 0 no, 1 border, 2 all
-  std::string gridAA, gridAB, gridAC, 
+  string gridAA, gridAB, gridAC, 
          gridBA, gridBB, gridBC, 
          gridCA, gridCB, gridCC;
   paired gridcell[9];
@@ -113,18 +115,18 @@ struct layout {
   layout();
 };
 
-extern std::map<int,layerrecord> LAYERHASH;
-extern std::set<int> MAP_PREVIEW_UP, MAP_PREVIEW_DOWN;
-extern std::list<scraprecord> SCRAPLIST;
-extern std::list<legendrecord> LEGENDLIST;
-extern std::list<colorlegendrecord> COLORLEGENDLIST;
+extern map<int,layerrecord> LAYERHASH;
+extern set<int> MAP_PREVIEW_UP, MAP_PREVIEW_DOWN;
+extern list<scraprecord> SCRAPLIST;
+extern list<legendrecord> LEGENDLIST;
+extern list<colorlegendrecord> COLORLEGENDLIST;
 extern layout LAYOUT;
-extern std::list<pattern> PATTERNLIST;
-extern std::list<converted_data> GRIDLIST;
+extern list<pattern> PATTERNLIST;
+extern list<converted_data> GRIDLIST;
 extern converted_data NArrow, ScBar;
 
 
 
-extern std::list<surfpictrecord> SURFPICTLIST;
+extern list<surfpictrecord> SURFPICTLIST;
 
 #endif

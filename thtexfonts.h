@@ -31,15 +31,17 @@
 #include <vector>
 #include <map>
 
-std::string select_lang(std::string s, std::string lang);
+using namespace std;
+
+string select_lang(string s, string lang);
 
 struct fontrecord {
   int id;
-  std::string rm,it,bf,ss,si;
+  string rm,it,bf,ss,si;
   bool opt;
 };
 
-extern std::list <fontrecord> FONTS;
+extern list <fontrecord> FONTS;
 
 int get_enc_id(const char* enc);
 void print_tex_encodings (void);
@@ -47,21 +49,21 @@ void print_fonts_setup(void);
 
 void init_encodings();
 
-std::string utf2texoctal(std::string s);
-std::string utf2texhex(std::string s);
-std::string utf2tex (std::string s, bool b=false);
-int tex2uni(std::string font, int ch);
-std::string replace_all(std::string s, std::string f, std::string r);
+string utf2texoctal(string s);
+string utf2texhex(string s);
+string utf2tex (string s, bool b=false);
+int tex2uni(string font, int ch);
+string replace_all(string s, string f, string r);
 
 struct encodings_new {
  private:
-  std::vector<int> v_fon;  // tex - unicode
-  std::map<int,int> m_fon; // unicode - tex
+  vector<int> v_fon;  // tex - unicode
+  map<int,int> m_fon; // unicode - tex
   int i_fon; // last position
   
  public:
   int NFSS, t1_convert;
-  std::string otf_file[5]; 
+  string otf_file[5]; 
   
   encodings_new();
   
